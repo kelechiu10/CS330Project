@@ -8,4 +8,3 @@ def get_resnet18(pretrained):
     resnet = models.resnet18(weights=weights)
     return resnet
 
-nn.Linear

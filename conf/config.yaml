@@ -1,0 +1,10 @@
+train:
+  save_model_interval: 100
+  num_epochs: 500
+  device: cpu
+  validation:
+    interval: 10
+    num_iterations: 100
+
+logging:
+  dir: ''
