@@ -15,7 +15,7 @@ import layered_model
 
 class single_layer_optimizer(optim.Optimizer):
     def __init__(self, layered_model, layer_name, lr=1e-3):
-        super().__init__()
+        super(single_layer_optimizer, self).__init__()
         layer_names = [x[0] for x in layered_model.layered_modules]
         layer_index = layer_names.index(layer_name)
         modules = layered_model.layered_modules[layer_index][1]
