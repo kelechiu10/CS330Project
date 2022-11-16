@@ -6,8 +6,8 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import torch
 import numpy as np
-from tqdm import tqdm
 from torch.utils.data.sampler import SubsetRandomSampler
+from datasets.util import random_split
 
 NORM = ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 common_corruptions = ['gaussian_noise', 'shot_noise', 'impulse_noise',
@@ -22,7 +22,7 @@ tr_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4),
                                     transforms.Normalize(*NORM)])
 
 
-def get_dataloaders(cfg, shuffle=True, split=(1.25, -0.25)):
+def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
     num_workers = cfg.train.num_workers
     batch_size = cfg.train.batch_size
 
@@ -38,9 +38,8 @@ def get_dataloaders(cfg, shuffle=True, split=(1.25, -0.25)):
     base_dataset = datasets.CIFAR10(
         root=cfg.datasets.cifar.dir, train=True, transform=tr_transforms, download=True
     )
-    print(split)
     base_dataset.data = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/{cfg.train.corruption}.npy')
-    train_dataset, test_dataset = torch.utils.data.random_split(base_dataset, split)
+    train_dataset, test_dataset = random_split(base_dataset, split)
 
     dataloaders = dict()
     dataloaders['train'] = torch.utils.data.DataLoader(
