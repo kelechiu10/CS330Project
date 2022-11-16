@@ -22,7 +22,7 @@ tr_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4),
                                     transforms.Normalize(*NORM)])
 
 
-def get_dataloaders(cfg, shuffle=True, split=(1.25, -0.25)):
+def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
     num_workers = cfg.train.num_workers
     batch_size = cfg.train.batch_size
 
@@ -38,7 +38,7 @@ def get_dataloaders(cfg, shuffle=True, split=(1.25, -0.25)):
     base_dataset = datasets.CIFAR10(
         root=cfg.datasets.cifar.dir, train=True, transform=tr_transforms, download=True
     )
-
+    print(split)
     base_dataset.data = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/{cfg.train.corruption}.npy')
     train_dataset, test_dataset = torch.utils.data.random_split(base_dataset, split)
 
