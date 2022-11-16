@@ -7,11 +7,10 @@ import torch.nn.functional as F
 from torch import autograd
 from torch.utils import tensorboard
 
-import omniglot
 import models
 
 layers = []
-resnet = models.initialize_model('resnet18', num_classes=10)
+resnet = models.get_model('resnet18', num_classes=10)
 for str, module in resnet.named_children():
     layers.append((str, module))
 

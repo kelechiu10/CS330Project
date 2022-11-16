@@ -3,11 +3,13 @@ from typing import Dict
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
+from torch import optim
 from torch.optim import Optimizer
 from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 import numpy as np
-
+import models
+from datasets import cifar_c
 
 def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer: Optimizer, writer, cfg):
     since = time.time()
@@ -60,10 +62,10 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
-    model = get_model(cfg)
-    dataloaders = get_dataloaders(cfg)
-    criterion = get_criterion(cfg)
-    optimizer = get_optimizer(cfg)
+    model = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
+    dataloaders = cifar_c.get_dataloaders(cfg)
+    criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
+    optimizer = optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
     writer = tensorboard.SummaryWriter(log_dir=cfg.log_dir)
     train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 

@@ -21,9 +21,6 @@ def get_dataloaders(args, shuffle=False, val_split=0.25):
     num_workers = args.num_workers
     batch_size = args.batch_size
 
-    indices = list(range(num_train))
-    split = int(np.floor(val_split * num_train))
-
     train_dataset = datasets.CIFAR10(
         root=args.dataroot, train=True,
         download=True, transform=tr_transforms,
@@ -36,22 +33,25 @@ def get_dataloaders(args, shuffle=False, val_split=0.25):
     train_dataset.data = np.load(args.dataroot + f'/CIFAR-10-C/{args.corruption}.npy')
     val_dataset.data = np.load(args.dataroot + f'/CIFAR-10-C/{args.corruption}.npy')
 
-    if shuffle:
-        np.random.seed(0) # can change later
-        np.random.shuffle(indices)
+    # indices = list(range(num_train))
+    # split = int(np.floor(val_split * num_train))
+    #
+    # if shuffle:
+    #     np.random.seed(0) # can change later
+    #     np.random.shuffle(indices)
 
-    train_idx, valid_idx = indices[split:], indices[:split]
-    train_sampler = SubsetRandomSampler(train_idx)
-    val_sampler = SubsetRandomSampler(valid_idx)
+    #train_idx, valid_idx = indices[split:], indices[:split]
+    #train_sampler = SubsetRandomSampler(train_idx)
+    #val_sampler = SubsetRandomSampler(valid_idx)
 
     dataloaders = dict()
     dataloaders['train'] = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batch_size, sampler=train_sampler,
-        num_workers=num_workers,
+        train_dataset, batch_size=batch_size,
+        num_workers=num_workers, shuffle=True
     )
     dataloaders['eval'] = torch.utils.data.DataLoader(
-        val_dataset, batch_size=batch_size, sampler=val_sampler,
-        num_workers=num_workers,
+        val_dataset, batch_size=batch_size,
+        num_workers=num_workers, shuffle=True
     )
 
     return dataloaders

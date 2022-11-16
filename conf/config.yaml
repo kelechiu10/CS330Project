@@ -1,7 +1,14 @@
 train:
+  model_name: 'resnet18'
+  pretrained_dir: ''
+  num_classes: 10
+  num_workers: 4
+  batch_size: 32
+  dataroot: 'data'
+  corruption: 'gaussian_noise'
   save_model_interval: 100
   num_epochs: 500
-  device: cpu
+  device: 'cpu'
   validation:
     interval: 10
     num_iterations: 100
