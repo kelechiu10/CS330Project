@@ -91,7 +91,7 @@ def main(cfg : DictConfig) -> None:
     dataloaders = cifar_c.get_dataloaders(cfg)
     criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
     optimizer = optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
-    writer = tensorboard.SummaryWriter(log_dir=cfg.logging.dir)
+    writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_' + cfg.train.dataset_name))
     train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 
 
