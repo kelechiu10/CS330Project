@@ -16,9 +16,9 @@ from tqdm import tqdm
 
 
 def save_model(model, epoch, cfg):
-    if not os.path.isdir(cfg.models.saves):
-        os.makedirs(cfg.models.saves)
-    file_path = os.path.join(cfg.models.saves, cfg.train.model_name + '_' + cfg.train.dataset_name)
+    if not os.path.isdir(cfg.models.save_dir):
+        os.makedirs(cfg.models.save_dir)
+    file_path = os.path.join(cfg.models.save_dir, cfg.train.model_name + '_' + cfg.train.dataset_name)
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
     file_name = "epoch_{:03d}.mdl".format(epoch)
@@ -32,6 +32,7 @@ def load_model(self, filename):
     self.policy.load_state_dict(state_dict)
     self.policy.eval()
     print('policy model ', filename, ' loaded successfully')
+
 
 def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer: Optimizer, writer, cfg):
     since = time.time()
