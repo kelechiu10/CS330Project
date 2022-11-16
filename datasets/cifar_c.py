@@ -16,23 +16,17 @@ tr_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4),
                                     transforms.ToTensor(),
                                     transforms.Normalize(*NORM)])
 
-# need args to have num_workers and batch_size even as defaults, as well as a dataroot
-def get_dataloaders(args, shuffle=True):
-    num_workers = args.num_workers
-    batch_size = args.batch_size
+def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
+    num_workers = cfg.train.num_workers
+    batch_size = cfg.train.batch_size
 
-    train_dataset = datasets.CIFAR10(
-        root=args.dataroot, train=True,
+    base_dataset = datasets.CIFAR10(
+        root=cfg.datasets.cifar.dir, train=True,
         download=True, transform=tr_transforms,
     )
-    val_dataset = datasets.CIFAR10(
-        root=args.dataroot, train=True,
-        download=True, transform=te_transforms,
-    )
 
-    train_dataset.data = np.load(args.dataroot + f'/CIFAR-10-C/{args.corruption}.npy')
-    val_dataset.data = np.load(args.dataroot + f'/CIFAR-10-C/{args.corruption}.npy')
-
+    base_dataset.data = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/{cfg.corruption}.npy')
+    train_dataset, test_dataset = torch.utils.data.random_split(base_dataset, split)
 
     dataloaders = dict()
     dataloaders['train'] = torch.utils.data.DataLoader(
@@ -40,7 +34,7 @@ def get_dataloaders(args, shuffle=True):
         num_workers=num_workers, shuffle=shuffle
     )
     dataloaders['eval'] = torch.utils.data.DataLoader(
-        val_dataset, batch_size=batch_size,
+        test_dataset, batch_size=batch_size,
         num_workers=num_workers, shuffle=shuffle
     )
 

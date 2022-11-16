@@ -13,5 +13,9 @@ train:
     interval: 10
     num_iterations: 100
 
+datasets:
+  cifar:
+    dir: ''
+
 logging:
   dir: ''
