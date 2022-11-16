@@ -16,7 +16,7 @@ common_corruptions = ['gaussian_noise', 'shot_noise', 'impulse_noise',
                       'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression']
 te_transforms = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize(*NORM)])
-tr_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4),
+tr_transforms = transforms.Compose([#transforms.RandomCrop(32, padding=4),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.ToTensor(),
                                     transforms.Normalize(*NORM)])

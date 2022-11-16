@@ -2,9 +2,8 @@ train:
   model_name: 'resnet18'
   dataset_name: 'cifar'
   pretrained_dir: './models/weights'
-  num_workers: 4
-  batch_size: 32
-  dataroot: 'data'
+  num_workers: 8
+  batch_size: 64
   corruption: 'gaussian_noise'
   save_model_interval: 10
   num_epochs: 500

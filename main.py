@@ -15,7 +15,6 @@ from models import models
 from tqdm import tqdm
 from models.util import get_accuracy
 
-
 def save_model(model, epoch, cfg):
     if not os.path.isdir(cfg.models.save_dir):
         os.makedirs(cfg.models.save_dir)
@@ -38,20 +37,20 @@ def load_model(self, filename):
 def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer: Optimizer, writer, cfg):
     since = time.time()
     model.to(cfg.train.device)
-    i = 0
+    itr = 0
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
         for batch in tqdm(dataloaders['train'], position=1, leave=False):
-            i += 1
+            itr += 1
             X, Y = batch
             X = X.to(cfg.train.device)
             Y = Y.to(cfg.train.device)
+            optimizer.zero_grad()
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            writer.add_scalar('train/loss', loss.item(), i)
+            writer.add_scalar('train/loss', loss.item(), itr)
         if (epoch + 1) % cfg.train.save_model_interval == 0:
             save_model(model, epoch, cfg)
         if (epoch + 1) % cfg.train.validation.interval == 0:
