@@ -299,43 +299,45 @@ def _resnet(arch, block, layers, pretrained_dir, device, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained_dir is not None:
         if not os.path.exists(pretrained_dir):
+            os.makedirs(pretrained_dir)
             download_weights(pretrained_dir)
 
         state_dict = torch.load(
-            pretrained_dir + "cifar10_models/state_dicts/" + arch + ".pt", map_location=device
+            os.path.join(pretrained_dir, "cifar10_models/state_dicts/", arch + ".pt"), map_location=device
         )
         model.load_state_dict(state_dict)
-    return model
+    layers = [model.conv1, model.layer1, model.layer2, model.layer3, model.layer4, model.fc]
+    return model, layers
 
 
-def resnet18(pretrained_dir=None, progress=True, device="cpu", **kwargs):
+def resnet18(pretrained_dir=None, device="cpu", **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained_dir, progress, device, **kwargs
+        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained_dir, device, **kwargs
     )
 
 
-def resnet34(pretrained_dir=None, progress=True, device="cpu", **kwargs):
+def resnet34(pretrained_dir=None, device="cpu", **kwargs):
     """Constructs a ResNet-34 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained_dir, progress, device, **kwargs
+        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained_dir, device, **kwargs
     )
 
 
-def resnet50(pretrained_dir=None, progress=True, device="cpu", **kwargs):
+def resnet50(pretrained_dir=None, device="cpu", **kwargs):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet50", Bottleneck, [3, 4, 6, 3], pretrained_dir, progress, device, **kwargs
+        "resnet50", Bottleneck, [3, 4, 6, 3], pretrained_dir, device, **kwargs
     )

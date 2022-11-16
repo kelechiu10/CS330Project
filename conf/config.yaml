@@ -1,7 +1,7 @@
 train:
   model_name: 'resnet18'
-  pretrained_dir: ''
-  num_classes: 10
+  dataset_name: 'cifar'
+  pretrained_dir: './models/weights'
   num_workers: 4
   batch_size: 32
   dataroot: 'data'
@@ -13,9 +13,12 @@ train:
     interval: 10
     num_iterations: 100
 
+models:
+  save_dir: './models/saves'
+
 datasets:
   cifar:
-    dir: ''
+    dir: './datasets/data'
 
 logging:
-  dir: ''
+  dir: './logs'

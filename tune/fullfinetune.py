@@ -1,13 +1,6 @@
-import os
-
-import numpy as np
-import torch
 from torch import nn
-import torch.nn.functional as F
-from torch import autograd
-from torch.utils import tensorboard
 
-import models
+from models import models
 
 layers = []
 resnet = models.get_model('resnet18', num_classes=10)
