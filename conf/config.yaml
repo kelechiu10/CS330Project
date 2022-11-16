@@ -3,7 +3,7 @@ train:
   dataset_name: 'cifar'
   pretrained_dir: './models/weights'
   num_workers: 4
-  batch_size: 4
+  batch_size: 32
   dataroot: 'data'
   corruption: 'gaussian_noise'
   save_model_interval: 10

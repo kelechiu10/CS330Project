@@ -13,6 +13,7 @@ import numpy as np
 from datasets import cifar_c
 from models import models
 from tqdm import tqdm
+from models.util import get_accuracy
 
 
 def save_model(model, epoch, cfg):
@@ -66,7 +67,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
                 losses.append(loss.item())
-                accuracies.append(model.calc_accuracy(Y_hat, Y))
+                accuracies.append(get_accuracy(Y_hat, Y))
             mean_loss = np.mean(losses)
             mean_accuracy = np.mean(accuracies)
             print(
