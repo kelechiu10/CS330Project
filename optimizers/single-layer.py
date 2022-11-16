@@ -9,13 +9,13 @@ from torch import autograd
 from torch.utils import tensorboard
 
 import omniglot
-#from models import resnet
+# from models import resnet
 import models
 import layered_model
 
-class single_layer_optimizer(optim.Optimizer):
+
+class SingleLayerOptimizer:
     def __init__(self, layered_model, layer_name, lr=1e-3):
-        super(single_layer_optimizer, self).__init__()
         layer_names = [x[0] for x in layered_model.layered_modules]
         layer_index = layer_names.index(layer_name)
         modules = layered_model.layered_modules[layer_index][1]
@@ -29,12 +29,8 @@ class single_layer_optimizer(optim.Optimizer):
 
         self.optimizer = optim.Adam(params=self.layer_parameters, lr=self.lr)
 
-    def step(self):
-        self.optimizer.step()
+    def step(self, closure=None):
+        return self.optimizer.step(closure=closure)
 
-    def zero_grad(self):
-        self.optimizer.zero_grad()
-
-
-
-
+    def zero_grad(self, set_to_none=False):
+        self.optimizer.zero_grad(set_to_none=set_to_none)

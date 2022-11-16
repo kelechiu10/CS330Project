@@ -3,6 +3,7 @@ import torch.nn as nn
 import torchvision.models as models
 from models import pretrained_resnet_cifar as pretrained_resnets
 
+
 def get_imagenet_model(model_name, pretrained=True):
     model = None
     if model_name == 'resnet18':
@@ -17,6 +18,7 @@ def get_imagenet_model(model_name, pretrained=True):
     else:
         raise NotImplementedError()
     return model
+
 
 def get_cifar_model(model_name, pretrained_dir=None):
     model = None

@@ -3,6 +3,9 @@ import torch
 import torch.nn as nn
 #import torchvision.models as models
 import os
+import requests
+import zipfile
+from tqdm import tqdm
 
 
 __all__ = [
@@ -261,11 +264,45 @@ class ResNet(nn.Module):
         return x
 
 
+def download_weights(dir):
+    url = (
+        "https://rutgers.box.com/shared/static/gkw08ecs797j2et1ksmbg1w5t3idf5r5.zip"
+    )
+
+    # Streaming, so we can iterate over the response.
+    r = requests.get(url, stream=True)
+
+    # Total size in Mebibyte
+    total_size = int(r.headers.get("content-length", 0))
+    block_size = 2 ** 20  # Mebibyte
+    t = tqdm(total=total_size, unit="MiB", unit_scale=True)
+
+    path_to_zip_file = os.path.join(dir, "state_dicts.zip")
+    directory_to_extract_to = os.path.join(dir, "cifar10_models")
+
+    with open(path_to_zip_file, "wb") as f:
+        for data in r.iter_content(block_size):
+            t.update(len(data))
+            f.write(data)
+    t.close()
+
+    if total_size != 0 and t.n != total_size:
+        raise Exception("Error, something went wrong")
+
+    print("Download successful. Unzipping file...")
+    with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
+        zip_ref.extractall(directory_to_extract_to)
+        print("Unzip file successful!")
+
+
 def _resnet(arch, block, layers, pretrained_dir, device, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained_dir is not None:
+        if not os.path.exists(pretrained_dir):
+            download_weights(pretrained_dir)
+
         state_dict = torch.load(
-            pretrained_dir + "/state_dicts/" + arch + ".pt", map_location=device
+            pretrained_dir + "cifar10_models/state_dicts/" + arch + ".pt", map_location=device
         )
         model.load_state_dict(state_dict)
     return model
