@@ -22,7 +22,7 @@ tr_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4),
                                     transforms.Normalize(*NORM)])
 
 
-def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
+def get_dataloaders(cfg, shuffle=True, split=(1.25, -0.25)):
     num_workers = cfg.train.num_workers
     batch_size = cfg.train.batch_size
 
