@@ -51,12 +51,14 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             loss.backward()
             optimizer.step()
             writer.add_scalar('train/loss', loss.item(), itr)
+
         if (epoch + 1) % cfg.train.save_model_interval == 0:
             save_model(model, epoch, cfg)
         if (epoch + 1) % cfg.train.validation.interval == 0:
             model.eval()
             losses = []
             accuracies = []
+            accuracies_train = []
             for i, batch in enumerate(dataloaders['eval']):
                 if i >= cfg.train.validation.num_iterations:
                     break
@@ -67,17 +69,33 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 loss = criterion(Y_hat, Y)
                 losses.append(loss.item())
                 accuracies.append(get_accuracy(Y_hat, Y))
+            for i, batch in enumerate(dataloaders['train']):
+                if i >= cfg.train.validation.num_iterations:
+                    break
+                X, Y = batch
+                X = X.to(cfg.train.device)
+                Y = Y.to(cfg.train.device)
+                Y_hat = model(X)
+                accuracies_train.append(get_accuracy(Y_hat, Y))
+            model.train()
             mean_loss = np.mean(losses)
             mean_accuracy = np.mean(accuracies)
+            mean_accuracies_train = np.mean(accuracies_train)
             print(
                 f'Validation: '
                 f'loss: {mean_loss:.3f}, '
                 f'support accuracy: {mean_accuracy:.3f}, '
+                f'train accuracy: {mean_accuracies_train:.3f}, '
             )
             writer.add_scalar('val/loss', mean_loss, epoch)
             writer.add_scalar(
                 'val/accuracy',
                 mean_accuracy,
+                epoch
+            )
+            writer.add_scalar(
+                'train/accuracy',
+                mean_accuracies_train,
                 epoch
             )
 
