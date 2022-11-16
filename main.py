@@ -105,7 +105,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
-    model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
+    model, layers = models.get_cifar_model(cfg.train.model_name, None)#cfg.train.pretrained_dir)
     dataloaders = cifar_c.get_dataloaders(cfg)
     criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
     optimizer = optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
