@@ -14,6 +14,8 @@ from datasets import cifar_c
 from models import models
 from tqdm import tqdm
 from models.util import get_accuracy
+from robustbench.utils import load_model as load_pretrained_model
+
 
 def save_model(model, epoch, cfg):
     if not os.path.isdir(cfg.models.save_dir):
@@ -102,10 +104,10 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
-
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
-    model, layers = models.get_cifar_model(cfg.train.model_name, None)#cfg.train.pretrained_dir)
+    # model, layers = models.get_cifar_model(cfg.train.model_name, None)#cfg.train.pretrained_dir)
+    model = load_pretrained_model(model_name='Standard', model_dir=cfg.train.pretrained_dir, dataset='cifar10')
     dataloaders = cifar_c.get_dataloaders(cfg)
     criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
     optimizer = optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
