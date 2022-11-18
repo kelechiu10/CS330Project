@@ -14,8 +14,7 @@ from datasets import cifar_c
 from models import models
 from tqdm import tqdm
 from models.util import get_accuracy
-from robustbench.utils import load_model as load_pretrained_model
-
+from optimizers import single_layer
 
 def save_model(model, epoch, cfg):
     if not os.path.isdir(cfg.models.save_dir):
@@ -36,7 +35,7 @@ def load_model(self, filename):
     print('policy model ', filename, ' loaded successfully')
 
 
-def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer: Optimizer, writer, cfg):
+def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer, writer, cfg):
     since = time.time()
     model.to(cfg.train.device)
     itr = 0
@@ -107,12 +106,15 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
     model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
+    num_layers = len(layers)
+    for idx in range(num_layers):
+        model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
     # model = load_pretrained_model(model_name='Standard', model_dir=cfg.train.pretrained_dir, dataset='cifar10')
-    dataloaders = cifar_c.get_dataloaders(cfg)
-    criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
-    optimizer = optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
-    writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_' + cfg.train.dataset_name))
-    train_model(model, dataloaders, criterion, optimizer, writer, cfg)
+        dataloaders = cifar_c.get_dataloaders(cfg)
+        criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
+        optimizer = single_layer.SingleLayerOptimizer(layers, idx)#optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
+        writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_singlelayer_' + str(idx) + '_' + cfg.train.dataset_name))
+        train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 
 
 if __name__ == "__main__":

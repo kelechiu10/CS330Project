@@ -6,8 +6,8 @@ train:
   batch_size: 64
   corruption: 'gaussian_noise'
   save_model_interval: 10
-  num_epochs: 500
-  device: 'cpu'
+  num_epochs: 20
+  device: 'cuda'
   validation:
     interval: 10
     num_iterations: 100
