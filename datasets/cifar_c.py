@@ -39,6 +39,7 @@ def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
         root=cfg.datasets.cifar.dir, train=True, transform=tr_transforms, download=True
     )
     base_dataset.data = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/{cfg.train.corruption}.npy')
+    base_dataset.targets = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/labels.npy')
     train_dataset, test_dataset = random_split(base_dataset, split)
 
     dataloaders = dict()
