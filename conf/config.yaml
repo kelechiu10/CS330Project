@@ -6,7 +6,7 @@ train:
   batch_size: 64
   corruption: 'gaussian_noise'
   save_model_interval: 10
-  num_epochs: 500
+  num_epochs: 15
   device: 'cpu'
   validation:
     interval: 10
