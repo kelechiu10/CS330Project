@@ -2,13 +2,8 @@ from typing import List
 from torch import optim
 
 
-# from models import resnet
-
-
 class SingleLayerOptimizer:
     def __init__(self, layers, idx, lr=1e-3):
-        # layer_names = [x[0] for x in layered_model.layered_modules]
-        # layer_index = layer_names.index(layer_name)
         layer = layers[idx]
 
         layer_params = []
