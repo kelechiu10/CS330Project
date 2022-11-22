@@ -6,7 +6,7 @@ class LayerWiseOptimizer:
     def __init__(self, layers, lr=1e-3, optimizer=optim.Adam):
         self.lr = lr
         self.n = len(layers)
-        param_groups = [{"params": layer, "lr": lr} for layer in layers]
+        param_groups = [{"params": layer.parameters(), "lr": lr} for layer in layers]
         self.optimizer = optimizer(params=param_groups, lr=self.lr)
 
     @property
