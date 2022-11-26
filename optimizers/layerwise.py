@@ -1,4 +1,3 @@
-import numpy as np
 from torch import optim
 
 
@@ -13,12 +12,17 @@ class LayerWiseOptimizer:
     def param_groups(self):
         return self.optimizer.param_groups
 
-    def step(self, learning_rates, closure=None):
-        assert len(learning_rates) == self.n
+    def step(self, weights, closure=None):
+        if isinstance(weights, int):
+            idx = weights
+            weights = [0] * self.n
+            weights[idx] = 1
+
+        assert len(weights) == self.n, f'Number of weights does not match number of layers {self.n}.'
 
         param_groups = self.optimizer.param_groups
         for i, group in enumerate(param_groups):
-            group['lr'] = learning_rates[i] * self.lr
+            group['lr'] = weights[i] * self.lr
 
         self.optimizer.step(closure=closure)
 
