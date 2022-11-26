@@ -15,7 +15,8 @@ class MABOptimizer:
         self.last_loss = None
 
     def step(self, loss, closure=None):
-        self.mab_policy.getReward(self.last_arm, self.last_loss / loss)
+        if self.last_loss is not None:
+            self.mab_policy.getReward(self.last_arm, self.last_loss / loss)
         self.last_loss = loss
 
         arm = self.mab_policy.choice()
