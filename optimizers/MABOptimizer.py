@@ -1,6 +1,8 @@
 from SMPyBandits.Policies import BasePolicy
 from torch import optim
 from optimizers.layerwise import LayerWiseOptimizer
+import numpy as np
+import torch
 
 
 class MABOptimizer:
@@ -16,12 +18,15 @@ class MABOptimizer:
 
     def step(self, loss, closure=None):
         if self.last_loss is not None:
-            self.mab_policy.getReward(self.last_arm, self.last_loss / loss)
+            self.mab_policy.getReward(self.last_arm, self.reward_metric(loss))#self.last_loss / loss)
         self.last_loss = loss
 
         arm = self.mab_policy.choice()
         self.last_arm = arm
         self.optimizer.step(arm, closure=closure)
 
+    def reward_metric(self, loss):
+        goodness = (loss - self.last_loss) / loss
+        return 1. / (1 + torch.exp(-goodness))
     def zero_grad(self, set_to_none=False):
         self.optimizer.zero_grad(set_to_none=set_to_none)

@@ -9,7 +9,7 @@ train:
   num_epochs: 15
   device: 'cpu'
   validation:
-    interval: 10
+    interval: 1
     num_iterations: 100
 
 models:
