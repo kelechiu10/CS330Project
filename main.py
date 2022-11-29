@@ -1,12 +1,10 @@
 import os
 import time
 from typing import Dict
-import hydra
 import torch
+import hydra
 from omegaconf import DictConfig, OmegaConf
-from torch import nn
-from torch import optim
-from torch.optim import Optimizer
+from torch import nn, optim
 from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 import numpy as np
@@ -14,10 +12,10 @@ from datasets import cifar_c
 from models import models
 from tqdm import tqdm
 from models.util import get_accuracy
-from optimizers import single_layer
-from optimizers import MABOptimizer
-from SMPyBandits.Policies import EpsilonGreedy
-from SMPyBandits.Policies import DiscountedThompson
+from optimizers import single_layer, MABOptimizer, gradnorm
+from SMPyBandits.Policies import EpsilonGreedy, DiscountedThompson
+from torchvision.models import resnet50, ResNet50_Weights
+from datasets.util import random_split
 
 
 def save_model(model, epoch, cfg):
@@ -32,10 +30,10 @@ def save_model(model, epoch, cfg):
     print('model saved in: ', file_name)
 
 
-def load_model(self, filename):
-    state_dict = torch.load(filename, map_location=self.device)
-    self.policy.load_state_dict(state_dict)
-    self.policy.eval()
+def load_model(model, filename):
+    state_dict = torch.load(filename)
+    model.load_state_dict(state_dict)
+    model.eval()
     print('policy model ', filename, ' loaded successfully')
 
 
@@ -103,9 +101,81 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 mean_accuracies_train,
                 epoch
             )
-
+    save_model(model, cfg.train.num_epochs, cfg)
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+
+
+def get_model(cfg):
+    if cfg.train.model == 'cifar':
+        return models.get_cifar_model(cfg.models.model_checkpoint, cfg.train.pretrained_dir)
+    elif cfg.models.model_checkpoint == 'imagenet':
+        model = resnet50(weights=ResNet50_Weights.DEFAULT)
+    else:
+        model = resnet50(weights=ResNet50_Weights.DEFAULT)
+        load_model(model, cfg.models.model_checkpoint)
+    layers = [model.conv1, model.layer1, model.layer2, model.layer3, model.layer4, model.fc]
+    return model, layers
+
+
+def get_dataloader(cfg):
+    if cfg.train.dataset_name == 'cifarc':
+        base_dataset = cifar_c.get_dataloaders(cfg, corrupted=True)
+    elif cfg.train.dataset_name == 'cifar':
+        base_dataset = cifar_c.get_dataloaders(cfg, corrupted=False)
+    else:
+        raise f'Unknown dataset \'{cfg.train.dataset_name}\''
+
+    train_dataset, test_dataset = random_split(base_dataset, cfg.dataset.split)
+    dataloaders = dict()
+    num_workers = cfg.train.num_workers
+    batch_size = cfg.train.batch_size
+    dataloaders['train'] = torch.utils.data.DataLoader(
+        train_dataset, batch_size=batch_size,
+        num_workers=num_workers, shuffle=cfg.datasets.shuffle
+    )
+    dataloaders['eval'] = torch.utils.data.DataLoader(
+        test_dataset, batch_size=batch_size,
+        num_workers=num_workers, shuffle=cfg.datasets.shuffle
+    )
+    return dataloaders
+
+
+def get_optimizer(cfg, opt, opt_variation, layers, model):
+    num_layers = len(layers)
+    if opt == 'MAB':
+        if opt_variation['type'] == 'epsilon_greedy':
+            policy = EpsilonGreedy(nbArms=num_layers)
+            optimizer = MABOptimizer.MABOptimizer(layers, lr=cfg.train.lr, mab_policy=policy)
+            return optimizer
+
+    elif opt == 'layerwise':
+        return single_layer.SingleLayerOptimizer(layers, opt_variation['idx'])
+    elif opt == 'gradnorm':
+        return gradnorm.GradNorm(layers, lr=cfg.train.lr)
+    elif opt == 'full':
+        return optim.Adam(params=model.parameters(), lr=cfg.train.lr)
+    else:
+        raise f'Unknown optimizer \'{opt}\''
+
+
+def get_variants(cfg, opt):
+    if opt == 'MAB':
+        return [{'type': t} for t in cfg.MAB.type.split(',')]
+    elif opt == 'layerwise':
+        if cfg.layerwise.idx == -1:
+            model, layers = get_model(cfg)
+            return [{'idx': idx} for idx in range(len(layers))]
+        elif isinstance(cfg.layerwise.idx, list):
+            return [{'idx': idx} for idx in cfg.layerwise.idx]
+        else:
+            return [{'idx': cfg.layerwise.idx}]
+    elif opt == 'full':
+        return [{}]
+    elif opt == 'gradnorm':
+        return [{}]
+    return [{}]
+
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
@@ -119,14 +189,18 @@ def main(cfg : DictConfig) -> None:
     #     optimizer = single_layer.SingleLayerOptimizer(layers, idx)#optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
     #     writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_singlelayer_' + str(idx) + '_' + cfg.train.dataset_name))
     #     train_model(model, dataloaders, criterion, optimizer, writer, cfg)
-    model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
-    num_layers = len(layers)
-    dataloaders = cifar_c.get_dataloaders(cfg)
-    criterion = nn.CrossEntropyLoss()
-    policy = EpsilonGreedy(nbArms=num_layers)
-    optimizer = MABOptimizer.MABOptimizer(layers, lr=1e-3, mab_policy=policy)
-    writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_MAB_epsilon_greedy_policy_' + '_' + cfg.train.dataset_name))
-    train_model(model, dataloaders, criterion, optimizer, writer, cfg)
+    # for model_name, mode in itertools.product(models, modes):
+    optimizers = cfg.optimizer.name.split(',')
+    for opt in optimizers:
+        for opt_variation in get_variants(cfg, opt):
+            model, layers = get_model(cfg)
+            dataloaders = get_dataloader(cfg)
+            criterion = nn.CrossEntropyLoss()
+            optimizer = get_optimizer(cfg, opt, opt_variation, layers, model)
+            writer = tensorboard.SummaryWriter(
+                log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_' + opt + '_' +
+                                     opt_variation + '_' + cfg.datasets.name))
+            train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 
 
 if __name__ == "__main__":
