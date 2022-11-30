@@ -9,16 +9,14 @@ from torch import optim
 from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 import numpy as np
-from datasets import cifar_c
-from datasets import cifar_flip
+import datasets
 from models import resnet_models
 from tqdm import tqdm
 from models.util import get_accuracy
-from optimizers import single_layer, MABOptimizer, gradnorm
+import optimizers
 from SMPyBandits.Policies import EpsilonGreedy, DiscountedThompson
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
-from SMPyBandits.Policies import DiscountedThompson
 
 
 def save_model(model, epoch, cfg):
@@ -55,7 +53,10 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
             loss.backward()
-            optimizer.step()  # loss
+            if isinstance(optimizer, MABOptimizer.MABOptimizer):
+                optimizer.step(loss)
+            else:
+                optimizer.step()  # loss
             writer.add_scalar('train/loss', loss.item(), itr)
 
         if (epoch + 1) % cfg.train.save_model_interval == 0:
@@ -124,11 +125,11 @@ def get_model(cfg):
 
 def get_dataloader(cfg):
     if cfg.datasets.name == 'cifarc':
-        base_dataset = cifar_c.get_dataloaders(cfg, corrupted=True)
+        base_dataset = datasets.cifar(cfg, corrupted=True)
     elif cfg.datasets.name == 'cifar':
-        base_dataset = cifar_c.get_dataloaders(cfg, corrupted=False)
+        base_dataset = datasets.cifar(cfg, corrupted=False)
     elif cfg.datasets.name == 'cifar_flip':
-        base_dataset = cifar_flip.get_dataloaders(cfg)
+        base_dataset = datasets.cifar_flip(cfg)
     else:
         raise f'Unknown dataset \'{cfg.train.dataset_name}\''
 
@@ -147,7 +148,7 @@ def get_dataloader(cfg):
     return dataloaders
 
 
-POLICIES = {
+MAB_POLICIES = {
     'epsilon_greedy': EpsilonGreedy,
     'discounted_thompson': DiscountedThompson
 }
@@ -156,13 +157,13 @@ POLICIES = {
 def get_optimizer(cfg, opt, opt_variation, layers, model):
     num_layers = len(layers)
     if opt == 'MAB':
-        policy = POLICIES[opt_variation['type']](nbArms=num_layers)
-        optimizer = MABOptimizer.MABOptimizer(layers, lr=cfg.train.lr, mab_policy=policy)
+        policy = MAB_POLICIES[opt_variation['type']](nbArms=num_layers)
+        optimizer = optimizers.MABOptimizer(layers, lr=cfg.train.lr, mab_policy=policy)
         return optimizer
     elif opt == 'layerwise':
-        return single_layer.SingleLayerOptimizer(layers, opt_variation['idx'])
+        return optimizers.SingleLayerOptimizer(layers, opt_variation['idx'])
     elif opt == 'gradnorm':
-        return gradnorm.GradNorm(layers, lr=cfg.train.lr)
+        return optimizers.GradNorm(layers, lr=cfg.train.lr)
     elif opt == 'full':
         return optim.Adam(params=model.parameters(), lr=cfg.train.lr)
     else:
