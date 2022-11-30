@@ -28,6 +28,8 @@ def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
     dataset.targets = flipped_targets
     train_dataset, test_dataset = random_split(dataset, split)
 
+    print(train_dataset)
+
     dataloaders = dict()
     dataloaders['train'] = torch.utils.data.DataLoader(
         train_dataset, batch_size=batch_size,

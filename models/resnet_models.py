@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as tmodels
-import pretrained_resnet_cifar as pretrained_resnets
+import models.pretrained_resnet_cifar as pretrained_resnets
 
 
 def get_imagenet_model(model_name, pretrained=True):

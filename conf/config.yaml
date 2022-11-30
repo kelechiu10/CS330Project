@@ -1,4 +1,5 @@
 train:
+  model_name: 'resnet50'
   pretrained_dir: './models/weights'
   num_workers: 8
   batch_size: 64
