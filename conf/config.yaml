@@ -1,5 +1,4 @@
 train:
-  model_name: 'resnet50'
   pretrained_dir: './models/weights'
   num_workers: 8
   batch_size: 64
@@ -12,7 +11,7 @@ train:
     num_iterations: 100
 
 optimizer:
-  name: 'MAB_epsilon_greedy'
+  name: 'MAB'
   MAB:
     type: 'epsilon_greedy'
   layerwise:
@@ -20,7 +19,7 @@ optimizer:
 
 models:
   save_dir: './models/saves'
-  model_checkpoint: 'resnet18'
+  model_checkpoint: 'cifar' # cifar, imagenet, or file path
 
 datasets:
   name: 'cifarc'
