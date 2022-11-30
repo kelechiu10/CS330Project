@@ -1,6 +1,6 @@
 from torch import nn
 
-from models import models
+from models import resnet_models
 
 layers = []
 resnet = models.get_model('resnet18', num_classes=10)
