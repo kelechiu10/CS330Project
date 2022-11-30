@@ -22,7 +22,7 @@ tr_transforms = transforms.Compose([#transforms.RandomCrop(32, padding=4),
 
 def get_dataloaders(cfg, corrupted=True):
     base_dataset = datasets.CIFAR10(
-        root=cfg.datasets.cifar.dir, train=True, transform=tr_transforms, download=True
+        root=cfg.datasets.dir, train=True, transform=tr_transforms, download=True
     )
 
     if corrupted:

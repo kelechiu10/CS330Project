@@ -6,7 +6,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import torch
 import numpy as np
-from torch.utils.data.sampler import SubsetRandomSampler
+# from torch.utils.data.sampler import SubsetRandomSampler
 from datasets.util import random_split
 
 NORM = ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -22,10 +22,10 @@ def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
     batch_size = cfg.train.batch_size
 
     dataset = datasets.CIFAR10(
-        root=cfg.datasets.cifar.dir, train=True, transform=tr_transforms, download=True
+        root=cfg.datasets.dir, train=True, transform=tr_transforms, download=True
     )
     flipped_targets = 9 - np.asarray(dataset.targets)
-    dataset.targets = flipped_targets.tolist()
+    dataset.targets = flipped_targets
     train_dataset, test_dataset = random_split(dataset, split)
 
     dataloaders = dict()
