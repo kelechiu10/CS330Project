@@ -1,23 +1,33 @@
 train:
-  model_name: 'resnet18'
-  dataset_name: 'cifar'
   pretrained_dir: './models/weights'
   num_workers: 8
   batch_size: 64
-  corruption: 'gaussian_noise'
-  save_model_interval: 10
+  save_model_interval: 5
   num_epochs: 15
   device: 'cpu'
+  lr: 1e-3
   validation:
     interval: 1
     num_iterations: 100
 
+optimizer:
+  name: 'MAB_epsilon_greedy'
+  MAB:
+    type: 'epsilon_greedy'
+  layerwise:
+    idx: -1
+
 models:
   save_dir: './models/saves'
+  model_checkpoint: 'resnet18'
 
 datasets:
+  name: 'cifarc'
+  split: [0.75, 0.25]
+  shuffle: True
   cifar:
     dir: './datasets/data'
+    corruption: 'gaussian_noise'
 
 logging:
   dir: './logs'

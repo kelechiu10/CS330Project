@@ -11,12 +11,10 @@ from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 import numpy as np
 from datasets import cifar_c
-from datasets import celeba
 from models import models
 from tqdm import tqdm
 from models.util import get_accuracy
 from optimizers import single_layer
-from datasets import cifar_flip
 from optimizers import MABOptimizer
 from SMPyBandits.Policies import EpsilonGreedy
 from SMPyBandits.Policies import DiscountedThompson
@@ -56,7 +54,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
             loss.backward()
-            optimizer.step() #loss
+            optimizer.step(loss)
             writer.add_scalar('train/loss', loss.item(), itr)
 
         if (epoch + 1) % cfg.train.save_model_interval == 0:
@@ -111,24 +109,24 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
-    model, layers = models.get_pretrained_resnet50(cfg.train.pretrained_dir)
-    num_layers = len(layers)
-    for idx in range(num_layers):
-        model, layers = models.get_pretrained_resnet50(cfg.train.pretrained_dir)
-    # model = load_pretrained_model(model_name='Standard', model_dir=cfg.train.pretrained_dir, dataset='cifar10')
-        dataloaders = cifar_flip.get_dataloaders(cfg)
-        criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
-        optimizer = single_layer.SingleLayerOptimizer(layers, idx)#optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
-        writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_singlelayer_' + str(idx) + '_' + cfg.train.dataset_name))
-        train_model(model, dataloaders, criterion, optimizer, writer, cfg)
-    # model, layers = models.get_pretrained_resnet50(cfg.train.pretrained_dir)
+    # model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
     # num_layers = len(layers)
-    # dataloaders = celeba.get_dataloaders(cfg)
-    # criterion = nn.CrossEntropyLoss()
-    # policy = EpsilonGreedy(nbArms=num_layers)
-    # optimizer = MABOptimizer.MABOptimizer(layers, lr=1e-3, mab_policy=policy)
-    # writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_MAB_epsilon_greedy_policy_' + '_' + cfg.train.dataset_name))
-    # train_model(model, dataloaders, criterion, optimizer, writer, cfg)
+    # for idx in range(num_layers):
+    #     model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
+    # # model = load_pretrained_model(model_name='Standard', model_dir=cfg.train.pretrained_dir, dataset='cifar10')
+    #     dataloaders = cifar_c.get_dataloaders(cfg)
+    #     criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
+    #     optimizer = single_layer.SingleLayerOptimizer(layers, idx)#optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
+    #     writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_singlelayer_' + str(idx) + '_' + cfg.train.dataset_name))
+    #     train_model(model, dataloaders, criterion, optimizer, writer, cfg)
+    model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
+    num_layers = len(layers)
+    dataloaders = cifar_c.get_dataloaders(cfg)
+    criterion = nn.CrossEntropyLoss()
+    policy = EpsilonGreedy(nbArms=num_layers)
+    optimizer = MABOptimizer.MABOptimizer(layers, lr=1e-3, mab_policy=policy)
+    writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_MAB_epsilon_greedy_policy_' + '_' + cfg.train.dataset_name))
+    train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 
 
 if __name__ == "__main__":
