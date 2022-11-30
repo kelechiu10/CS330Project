@@ -11,6 +11,7 @@ from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 import numpy as np
 from datasets import cifar_c
+from datasets import cifar_flip
 from models import models
 from tqdm import tqdm
 from models.util import get_accuracy
@@ -121,7 +122,7 @@ def main(cfg : DictConfig) -> None:
     #     train_model(model, dataloaders, criterion, optimizer, writer, cfg)
     model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
     num_layers = len(layers)
-    dataloaders = cifar_c.get_dataloaders(cfg)
+    dataloaders = cifar_flip.get_dataloaders(cfg)
     criterion = nn.CrossEntropyLoss()
     policy = EpsilonGreedy(nbArms=num_layers)
     optimizer = MABOptimizer.MABOptimizer(layers, lr=1e-3, mab_policy=policy)
