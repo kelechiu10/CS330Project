@@ -132,8 +132,10 @@ def get_dataloader(cfg):
         base_dataset = datasets.cifar(cfg, corrupted=False)
     elif cfg.datasets.name == 'cifar_flip':
         return datasets.cifar_flip(cfg)
-    elif cfg.datasets.name == 'living17':
-        return
+    elif cfg.datasets.name == 'living_17_source':
+        return datasets.living_17(cfg, source=True)
+    elif cfg.datasets.name == 'living_17_target':
+        return datasets.living_17(cfg, source=False)
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 
