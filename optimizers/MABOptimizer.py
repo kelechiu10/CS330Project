@@ -14,7 +14,7 @@ class EpsilonGreedyFixed(EpsilonGreedy):
     def choice(self):
         """With a probability of epsilon, explore (uniform choice), otherwhise exploit based on just accumulated *rewards* (not empirical mean rewards)."""
         if with_proba(self.epsilon):  # Proba epsilon : explore
-            return rn.randint(0, self.nbArms - 1)
+            return rn.randint(0, self.nbArms)
         else:  # Proba 1 - epsilon : exploit
             # Uniform choice among the best arms
             biased_means = self.rewards / (1 + self.pulls)
