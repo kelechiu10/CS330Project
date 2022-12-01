@@ -1,8 +1,23 @@
-from SMPyBandits.Policies import BasePolicy
+from SMPyBandits.Policies import BasePolicy, EpsilonGreedy, with_proba
 from torch import optim
 from optimizers.layerwise import LayerWiseOptimizer
 import numpy as np
+import numpy.random as rn
 import torch
+
+
+class EpsilonGreedyFixed(EpsilonGreedy):
+    def __init__(self, nbArms, epsilon=EPSILON, lower=0., amplitude=1.):
+        super(EpsilonGreedyFixed, self).__init__(nbArms, lower=lower, amplitude=amplitude)
+
+    def choice(self):
+        """With a probability of epsilon, explore (uniform choice), otherwhise exploit based on just accumulated *rewards* (not empirical mean rewards)."""
+        if with_proba(self.epsilon):  # Proba epsilon : explore
+            return rn.randint(0, self.nbArms - 1)
+        else:  # Proba 1 - epsilon : exploit
+            # Uniform choice among the best arms
+            biased_means = self.rewards / (1 + self.pulls)
+            return rn.choice(np.nonzero(biased_means == np.max(biased_means))[0])
 
 
 class MABOptimizer:

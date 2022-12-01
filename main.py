@@ -15,9 +15,10 @@ from tqdm import tqdm
 from models.util import get_accuracy
 import optimizers
 from optimizers import MABOptimizer
-from SMPyBandits.Policies import EpsilonGreedy, DiscountedThompson
+from SMPyBandits.Policies import DiscountedThompson
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
+from optimizers.MABOptimizer import EpsilonGreedyFixed
 
 
 def save_model(model, epoch, cfg):
@@ -131,6 +132,8 @@ def get_dataloader(cfg):
         base_dataset = datasets.cifar(cfg, corrupted=False)
     elif cfg.datasets.name == 'cifar_flip':
         return datasets.cifar_flip(cfg)
+    elif cfg.datasets.name == 'living17':
+        return
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 
@@ -150,7 +153,7 @@ def get_dataloader(cfg):
 
 
 MAB_POLICIES = {
-    'epsilon_greedy': EpsilonGreedy,
+    'epsilon_greedy': EpsilonGreedyFixed,
     'discounted_thompson': DiscountedThompson
 }
 
