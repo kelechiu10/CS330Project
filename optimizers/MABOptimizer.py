@@ -22,11 +22,12 @@ class MABOptimizer:
         self.last_loss = loss
 
         arm = self.mab_policy.choice()
+        #print(arm)
         self.last_arm = arm
         self.optimizer.step(arm, closure=closure)
 
     def reward_metric(self, loss):
-        goodness = (self.last_loss - loss) / loss
+        goodness = (self.last_loss - loss) / self.last_loss
         return 1. / (1 + torch.exp(-goodness))
 
     def zero_grad(self, set_to_none=False):

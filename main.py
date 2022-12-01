@@ -14,6 +14,7 @@ from models import resnet_models
 from tqdm import tqdm
 from models.util import get_accuracy
 import optimizers
+from optimizers import MABOptimizer
 from SMPyBandits.Policies import EpsilonGreedy, DiscountedThompson
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
@@ -22,7 +23,7 @@ from datasets.util import random_split
 def save_model(model, epoch, cfg):
     if not os.path.isdir(cfg.models.save_dir):
         os.makedirs(cfg.models.save_dir)
-    file_path = os.path.join(cfg.models.save_dir, cfg.train.model_name + '_' + cfg.train.dataset_name)
+    file_path = os.path.join(cfg.models.save_dir, cfg.train.model_name + '_' + cfg.datasets.name)
     if not os.path.isdir(file_path):
         os.makedirs(file_path)
     file_name = "epoch_{:03d}.mdl".format(epoch)
@@ -53,7 +54,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
             loss.backward()
-            if isinstance(optimizer, MABOptimizer.MABOptimizer):
+            if isinstance(optimizer, MABOptimizer):
                 optimizer.step(loss)
             else:
                 optimizer.step()  # loss
@@ -112,7 +113,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 
 def get_model(cfg):
     if cfg.models.model_checkpoint == 'cifar':
-        return resnet_models.get_cifar_model(cfg.models.model_checkpoint, cfg.train.pretrained_dir)
+        return resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
     elif cfg.models.model_checkpoint == 'imagenet':
         model = resnet50(weights=ResNet50_Weights.DEFAULT)
     else:
@@ -129,11 +130,11 @@ def get_dataloader(cfg):
     elif cfg.datasets.name == 'cifar':
         base_dataset = datasets.cifar(cfg, corrupted=False)
     elif cfg.datasets.name == 'cifar_flip':
-        base_dataset = datasets.cifar_flip(cfg)
+        return datasets.cifar_flip(cfg)
     else:
-        raise f'Unknown dataset \'{cfg.train.dataset_name}\''
+        raise f'Unknown dataset \'{cfg.datasets.name}\''
 
-    train_dataset, test_dataset = random_split(base_dataset, cfg.dataset.split)
+    train_dataset, test_dataset = random_split(base_dataset, cfg.datasets.split)
     dataloaders = dict()
     num_workers = cfg.train.num_workers
     batch_size = cfg.train.batch_size
@@ -172,7 +173,7 @@ def get_optimizer(cfg, opt, opt_variation, layers, model):
 
 def get_variants(cfg, opt):
     if opt == 'MAB':
-        return [{'type': t} for t in cfg.MAB.type.split(',')]
+        return [{'type': t} for t in cfg.optimizer.MAB.type.split(',')]
     elif opt == 'layerwise':
         if cfg.layerwise.idx == -1:
             model, layers = get_model(cfg)
@@ -198,8 +199,8 @@ def main(cfg: DictConfig) -> None:
             criterion = nn.CrossEntropyLoss()
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model)
             writer = tensorboard.SummaryWriter(
-                log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_' + opt + '_' +
-                                     opt_variation + '_' + cfg.datasets.name))
+                log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_' + cfg.optimizer.name + '_' +
+                                     opt_variation['type'] + '_' + cfg.datasets.name))
             train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 
     # model, layers = resnet_models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
