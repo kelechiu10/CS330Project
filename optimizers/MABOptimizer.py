@@ -6,6 +6,7 @@ import numpy.random as rn
 import torch
 
 
+EPSILON = 0.1
 class EpsilonGreedyFixed(EpsilonGreedy):
     def __init__(self, nbArms, epsilon=EPSILON, lower=0., amplitude=1.):
         super(EpsilonGreedyFixed, self).__init__(nbArms, lower=lower, amplitude=amplitude)
