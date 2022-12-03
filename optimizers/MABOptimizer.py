@@ -46,7 +46,8 @@ class MABOptimizer:
 
     def reward_metric(self, loss):
         goodness = (self.last_loss - loss) / self.last_loss
-        return 1. / (1 + torch.exp(-goodness))
+        # return 1. / (1 + torch.exp(-goodness))
+        return goodness
 
     def zero_grad(self, set_to_none=False):
         self.optimizer.zero_grad(set_to_none=set_to_none)

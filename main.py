@@ -1,5 +1,6 @@
 import os
 import time
+from functools import partial
 from typing import Dict
 import hydra
 import torch
@@ -14,8 +15,7 @@ from models import resnet_models
 from tqdm import tqdm
 from models.util import get_accuracy
 import optimizers
-from optimizers import MABOptimizer
-from SMPyBandits.Policies import DiscountedThompson
+from SMPyBandits.Policies import DiscountedThompson, BESA, SWklUCBPlus, WrapRange
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
 from optimizers.MABOptimizer import EpsilonGreedyFixed
@@ -154,9 +154,13 @@ def get_dataloader(cfg):
     return dataloaders
 
 
+WrapRange = partial(WrapRange, lower=0.0, amplitude=0.2)
+
 MAB_POLICIES = {
-    'epsilon_greedy': EpsilonGreedyFixed,
-    'discounted_thompson': DiscountedThompson
+    'epsilon_greedy': partial(WrapRange, policy=EpsilonGreedyFixed),
+    'discounted_thompson': partial(WrapRange, policy=DiscountedThompson),
+    'BESA': partial(BESA, minPullsOfEachArm=3),
+    'SWklUCBPlus': partial(WrapRange, policy=partial(SWklUCBPlus, tau=100))
 }
 
 
