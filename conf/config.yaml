@@ -1,35 +1,37 @@
 train:
-  model_name: 'resnet50'
-  pretrained_dir: './models/weights'
+  model_name: "resnet50"
+  pretrained_dir: "./models/weights"
   num_workers: 8
   batch_size: 64
   save_model_interval: 5
   num_epochs: 20
-  device: 'cpu'
+  device: "cpu"
   lr: 1e-3
   validation:
     interval: 1
     num_iterations: 100
 
 optimizer:
-  name: 'MAB'
+  name: "MAB"
   MAB:
-    type: 'epsilon_greedy, discounted_thompson'
+    type: "epsilon_greedy, discounted_thompson"
   layerwise:
     idx: -1
 
 models:
-  name: 'resnet50'
-  save_dir: './models/saves'
-  model_checkpoint: 'cifar' # cifar, imagenet, or file path
+  name: "resnet50"
+  save_dir: "./models/saves"
+  model_checkpoint: "cifar" # cifar, imagenet, or file path
 
 datasets:
-  name: 'cifarc'
+  name: "cifarc"
   split: [0.75, 0.25]
   shuffle: True
-  dir: './datasets/data'
+  dir: "./datasets/data"
   cifar:
-    corruption: 'gaussian_noise'
+    corruption: "gaussian_noise"
+  living17:
+    info_dir: "./datasets/data/imagenet_class_hierarchy/modified"
 
 logging:
-  dir: './logs'
+  dir: "./logs"
