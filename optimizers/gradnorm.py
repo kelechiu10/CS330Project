@@ -21,7 +21,8 @@ class GradNorm:
         grad_norms = F.softmax(grad_norms, dim=0)
         return grad_norms
 
-    def step(self, closure=None):
+    def step(self, loss, closure=None):
+        loss.backward()
         grad_norms = self.get_grad_norms()
         self.optimizer.step(grad_norms, closure=closure)
 

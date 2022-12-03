@@ -18,7 +18,8 @@ class SingleLayerOptimizer:
 
         self.optimizer = optim.Adam(params=self.layer_parameters, lr=self.lr)
 
-    def step(self, closure=None):
+    def step(self, loss, closure=None):
+        loss.backward()
         return self.optimizer.step(closure=closure)
 
     def zero_grad(self, set_to_none=False):

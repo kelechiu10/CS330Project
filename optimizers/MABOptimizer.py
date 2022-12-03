@@ -40,6 +40,8 @@ class MABOptimizer:
         arm = self.mab_policy.choice()
         #print(arm)
         self.last_arm = arm
+
+        loss.backward()
         self.optimizer.step(arm, closure=closure)
 
     def reward_metric(self, loss):
