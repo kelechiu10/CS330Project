@@ -5,13 +5,13 @@ from robustness.tools.breeds_helpers import setup_breeds
 
 # returns both the source(pretrain) and target(finetuning)
 def get_dataloaders(cfg, source=True):
-    if not hasattr(cfg, 'info_dir'):
-        cfg.datasets.living17.info_dir = './imagenet_class_hierarchy/modified'
-    if not (os.path.exists(datasets.living17.info_dir) and len(os.listdir(cfg.info_dir))):
+    if not hasattr(cfg.datasets.living17, 'info_dir'):
+        cfg.datasets.living17.info_dir = "./datasets/data/imagenet_class_hierarchy/modified"
+    if not (os.path.exists(cfg.datasets.living17.info_dir) and len(os.listdir(cfg.info_dir))):
         print("Downloading class hierarchy information into `info_dir`")
-        setup_breeds(datasets.living17.info_dir)
+        setup_breeds(cfg.datasets.living17.info_dir)
 
-    ret = make_living17(datasets.living17.info_dir, split="rand")
+    ret = make_living17(cfg.datasets.living17.info_dir, split="rand")
     superclasses, subclass_split, label_map = ret
     train_subclasses, test_subclasses = subclass_split
     dataloaders = dict()

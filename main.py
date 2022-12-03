@@ -132,10 +132,14 @@ def get_dataloader(cfg):
         base_dataset = datasets.cifar(cfg, corrupted=False)
     elif cfg.datasets.name == 'cifar_flip':
         return datasets.cifar_flip(cfg)
-    elif cfg.datasets.name == 'living_17_source':
-        return datasets.living_17(cfg, source=True)
-    elif cfg.datasets.name == 'living_17_target':
-        return datasets.living_17(cfg, source=False)
+    elif cfg.datasets.name == 'living17_source':
+        return datasets.living17(cfg, source=True)
+    elif cfg.datasets.name == 'living17_target':
+        return datasets.living17(cfg, source=False)
+    elif cfg.datasets.name == 'sp_cifar_100_source':
+        return datasets.sp_cifar_100(cfg, source=True)
+    elif cfg.datasets.name == 'sp_cifar_100_target':
+        return datasets.sp_cifar_100(cfg, source=False)
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 
@@ -201,6 +205,9 @@ def main(cfg: DictConfig) -> None:
         for opt_variation in get_variants(cfg, opt):
             model, layers = get_model(cfg)
             dataloaders = get_dataloader(cfg)
+            print(len(dataloaders['train']))
+            print(len(dataloaders['test']))
+            exit()
             criterion = nn.CrossEntropyLoss()
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model)
             writer = tensorboard.SummaryWriter(
