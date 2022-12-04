@@ -132,10 +132,10 @@ def get_dataloader(cfg):
     #     return datasets.living17(cfg, source=True)
     # elif cfg.datasets.name == 'living17_target':
     #     return datasets.living17(cfg, source=False)
-    # elif cfg.datasets.name == 'sp_cifar_100_source':
-    #     return datasets.sp_cifar_100(cfg, source=True)
-    # elif cfg.datasets.name == 'sp_cifar_100_target':
-    #     return datasets.sp_cifar_100(cfg, source=False)
+    elif cfg.datasets.name == 'sp_cifar_100_source':
+        base_dataset = datasets.sp_cifar_100(cfg, source=True)
+    elif cfg.datasets.name == 'sp_cifar_100_target':
+        base_dataset = datasets.sp_cifar_100(cfg, source=False)
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 

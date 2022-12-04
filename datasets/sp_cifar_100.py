@@ -98,8 +98,8 @@ def get_dataloaders(cfg, source=True):
     #cfg.datasets.dir = './datasets/data'
     SEED=42
 
-    train_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=True, download=True)
-    test_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=False)
+    train_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=True, transform=torchvision.transforms.ToTensor(), download=True)
+    test_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=False, transform=torchvision.transforms.ToTensor())
 
     # print(len(old_data))
     _populate()
@@ -107,13 +107,12 @@ def get_dataloaders(cfg, source=True):
     tr_targets = train_set.targets
     ts_targets = test_set.targets
     targets = tr_targets + ts_targets
-    src_idx, tgt_idx= train_test_split(
-    np.arange(len(targets)), test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
+    src_idx, tgt_idx= train_test_split(np.arange(len(targets)),
+        test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
 
     train_set.targets = sparse2coarse(tr_targets)
     test_set.targets = sparse2coarse(ts_targets)
     old_data = ConcatDataset([train_set, test_set])
-
     # probs = [0.35, 0.35, 0.2, 0.05, 0.05]
     # counts = [6000] * 5 # for a single superclass
     # all_counts = [int(p * c) for p, c in zip(probs, counts)]
