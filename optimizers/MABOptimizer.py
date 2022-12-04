@@ -34,15 +34,17 @@ class MABOptimizer:
 
     def step(self, loss, closure=None):
         if self.last_loss is not None:
-            self.mab_policy.getReward(self.last_arm, self.reward_metric(loss))#self.last_loss / loss)
-        self.last_loss = loss
-
+            self.mab_policy.getReward(self.last_arm, self.reward_metric(loss.item()))#self.last_loss / loss)
+            print(self.reward_metric(loss.item()))
+        self.last_loss = loss.item()
         arm = self.mab_policy.choice()
         #print(arm)
         self.last_arm = arm
 
         loss.backward()
         self.optimizer.step(arm, closure=closure)
+        print(self.mab_policy.rewards / (1 + self.mab_policy.pulls))
+        print(self.mab_policy.pulls)
 
     def reward_metric(self, loss):
         goodness = (self.last_loss - loss) / self.last_loss

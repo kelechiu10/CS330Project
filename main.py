@@ -64,7 +64,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             losses = []
             accuracies = []
             accuracies_train = []
-            for i, batch in enumerate(dataloaders['eval']):
+            for i, batch in enumerate(dataloaders['test']):
                 if i >= cfg.train.validation.num_iterations:
                     break
                 X, Y = batch
@@ -128,10 +128,10 @@ def get_dataloader(cfg):
         base_dataset = datasets.cifar(cfg, corrupted=False)
     elif cfg.datasets.name == 'cifar_flip':
         return datasets.cifar_flip(cfg)
-    elif cfg.datasets.name == 'living17_source':
-        return datasets.living17(cfg, source=True)
-    elif cfg.datasets.name == 'living17_target':
-        return datasets.living17(cfg, source=False)
+    # elif cfg.datasets.name == 'living17_source':
+    #     return datasets.living17(cfg, source=True)
+    # elif cfg.datasets.name == 'living17_target':
+    #     return datasets.living17(cfg, source=False)
     elif cfg.datasets.name == 'sp_cifar_100_source':
         return datasets.sp_cifar_100(cfg, source=True)
     elif cfg.datasets.name == 'sp_cifar_100_target':
@@ -147,7 +147,7 @@ def get_dataloader(cfg):
         train_dataset, batch_size=batch_size,
         num_workers=num_workers, shuffle=cfg.datasets.shuffle
     )
-    dataloaders['eval'] = torch.utils.data.DataLoader(
+    dataloaders['test'] = torch.utils.data.DataLoader(
         test_dataset, batch_size=batch_size,
         num_workers=num_workers, shuffle=cfg.datasets.shuffle
     )
@@ -182,15 +182,18 @@ def get_optimizer(cfg, opt, opt_variation, layers, model):
 
 def get_variants(cfg, opt):
     if opt == 'MAB':
-        return [{'type': t} for t in cfg.optimizer.MAB.type.split(',')]
+        types = cfg.optimizer.MAB.type
+        if not isinstance(types, list):
+            types = [types]
+        return [{'type': t} for t in types]
     elif opt == 'layerwise':
         if cfg.layerwise.idx == -1:
             model, layers = get_model(cfg)
-            return [{'idx': idx} for idx in range(len(layers))]
+            return [{'idx': idx, 'type': idx} for idx in range(len(layers))]
         elif isinstance(cfg.layerwise.idx, list):
-            return [{'idx': idx} for idx in cfg.layerwise.idx]
+            return [{'idx': idx, 'type': idx} for idx in cfg.layerwise.idx]
         else:
-            return [{'idx': cfg.layerwise.idx}]
+            return [{'idx': cfg.layerwise.idx, 'type': cfg.layerwise.idx}]
     elif opt == 'full':
         return [{}]
     elif opt == 'gradnorm':
@@ -200,14 +203,13 @@ def get_variants(cfg, opt):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
-    optimizers = cfg.optimizer.name.split(',')
-    for opt in optimizers:
+    opts = cfg.optimizer.name
+    if not isinstance(opts, list):
+        opts = [opts]
+    for opt in opts:
         for opt_variation in get_variants(cfg, opt):
             model, layers = get_model(cfg)
             dataloaders = get_dataloader(cfg)
-            print(len(dataloaders['train']))
-            print(len(dataloaders['test']))
-            exit()
             criterion = nn.CrossEntropyLoss()
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model)
             writer = tensorboard.SummaryWriter(

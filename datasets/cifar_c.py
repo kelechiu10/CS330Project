@@ -26,16 +26,16 @@ def get_dataloaders(cfg, corrupted=True):
     )
 
     if corrupted:
-        if not os.path.exists(os.path.join(cfg.datasets.cifar.dir, 'CIFAR-10-C')):
+        if not os.path.exists(os.path.join(cfg.datasets.dir, 'CIFAR-10-C')):
             print('Begin downloading CIFAR10-C dataset')
-            if not os.path.exists(cfg.datasets.cifar.dir):
-                os.mkdir(cfg.datasets.cifar.dir)
+            if not os.path.exists(cfg.datasets.dir):
+                os.mkdir(cfg.datasets.dir)
             url = 'https://zenodo.org/record/2535967/files/CIFAR-10-C.tar'
             with requests.get(url, stream=True) as rx, tarfile.open(fileobj=rx.raw, mode="r|") as tarobj:
-                tarobj.extractall(path=cfg.datasets.cifar.dir)
+                tarobj.extractall(path=cfg.cifar.dir)
             print('Download successful!')
 
-        base_dataset.data = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')
-        base_dataset.targets = np.load(cfg.datasets.cifar.dir + f'/CIFAR-10-C/labels.npy')
+        base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')
+        base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')
 
     return base_dataset

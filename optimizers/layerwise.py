@@ -6,9 +6,7 @@ class LayerWiseOptimizer:
     def __init__(self, layers, lr=1e-3, optimizer=optim.Adam, **kwargs):
         self.lr = lr
         self.n = len(layers)
-        print(self.n)
         param_groups = [{"params": layer.parameters(), "lr": lr} for layer in layers]
-        print(kwargs)
         self.optimizer = optimizer(params=param_groups, lr=self.lr, **kwargs)
 
     @property
@@ -28,8 +26,6 @@ class LayerWiseOptimizer:
         param_groups = self.optimizer.param_groups
         for i, group in enumerate(param_groups):
             group['lr'] = weights[i] * self.lr
-            print(group['lr'])
-            print(weights[i])
         self.optimizer.step(closure=closure)
 
     def zero_grad(self, set_to_none=False):
