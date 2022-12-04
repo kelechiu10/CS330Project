@@ -68,7 +68,7 @@ def _populate():
     class_to_idx = _load_meta()
     # print(all_labels)
     probs = [0.35, 0.35, 0.2, 0.05, 0.05]
-    counts = [100] * 5 # for a single superclass
+    counts = [3000] * 5 # for a single superclass
     all_counts = [int(p * c) for p, c in zip(probs, counts)]
 
     main_labels = all_labels.split('\n')
@@ -100,21 +100,27 @@ def get_dataloaders(cfg, source=True):
 
     train_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=True, download=True)
     test_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=False)
-    old_data = ConcatDataset([train_set, test_set])
+
     # print(len(old_data))
     _populate()
-    targets = old_data.targets
+    # targets = old_data.targets
+    tr_targets = train_set.targets
+    ts_targets = test_set.targets
+    targets = tr_targets + ts_targets
     src_idx, tgt_idx= train_test_split(
     np.arange(len(targets)), test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
 
-    probs = [0.35, 0.35, 0.2, 0.05, 0.05]
-    counts = [6000] * 5 # for a single superclass
-    all_counts = [int(p * c) for p, c in zip(probs, counts)]
+    train_set.targets = sparse2coarse(tr_targets)
+    test_set.targets = sparse2coarse(ts_targets)
+    old_data = ConcatDataset([train_set, test_set])
+
+    # probs = [0.35, 0.35, 0.2, 0.05, 0.05]
+    # counts = [6000] * 5 # for a single superclass
+    # all_counts = [int(p * c) for p, c in zip(probs, counts)]
     # for i in range(10):
     #   all_counts.append([int(p * c) for p, c in zip(probs, counts)])
     # chat gpt this
 
-    old_data.targets = sparse2coarse(old_data.targets)
     # let source and target be the same size?
     if source:
         # pass in indicies that are sampled that are towards a distribution towards 3 labels in the dataset
