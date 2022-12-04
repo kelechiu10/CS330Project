@@ -55,7 +55,11 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
-            optimizer.step(loss)
+            if isinstance(optimizer, optim.Adam):
+                loss.backward()
+                optimizer.step()
+            else:
+                optimizer.step(loss)
             writer.add_scalar('train/loss', loss.item(), itr)
 
         if (epoch + 1) % cfg.train.save_model_interval == 0:
