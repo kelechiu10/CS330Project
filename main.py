@@ -15,6 +15,7 @@ from models import resnet_models
 from tqdm import tqdm
 from models.util import get_accuracy
 import optimizers
+import timm
 from SMPyBandits.Policies import DiscountedThompson, BESA, SWklUCBPlus, WrapRange
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
@@ -54,7 +55,11 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
-            optimizer.step(loss)
+            if isinstance(optimizer, optim.Adam):
+                loss.backward()
+                optimizer.step()
+            else:
+                optimizer.step(loss)
             writer.add_scalar('train/loss', loss.item(), itr)
 
         if (epoch + 1) % cfg.train.save_model_interval == 0:
@@ -123,6 +128,8 @@ def get_model(cfg):
         return resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
     elif cfg.models.model_checkpoint == 'imagenet':
         model = resnet50(weights=ResNet50_Weights.DEFAULT)
+    elif cfg.models.model_checkpoint == 'cifar_100':
+        model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
     else:
         model = resnet50(weights=ResNet50_Weights.DEFAULT)
         load_model(model, cfg.models.model_checkpoint)
@@ -142,10 +149,10 @@ def get_dataloader(cfg):
     #     return datasets.living17(cfg, source=True)
     # elif cfg.datasets.name == 'living17_target':
     #     return datasets.living17(cfg, source=False)
-    # elif cfg.datasets.name == 'sp_cifar_100_source':
-    #     return datasets.sp_cifar_100(cfg, source=True)
-    # elif cfg.datasets.name == 'sp_cifar_100_target':
-    #     return datasets.sp_cifar_100(cfg, source=False)
+    elif cfg.datasets.name == 'sp_cifar_100_source':
+        base_dataset = datasets.sp_cifar_100(cfg, source=True)
+    elif cfg.datasets.name == 'sp_cifar_100_target':
+        base_dataset = datasets.sp_cifar_100(cfg, source=False)
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 
