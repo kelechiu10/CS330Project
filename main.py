@@ -104,6 +104,16 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 epoch
             )
     save_model(model, cfg.train.num_epochs, cfg)
+    accuracies = []
+    for i, batch in enumerate(dataloaders['test']):
+        X, Y = batch
+        X = X.to(cfg.train.device)
+        Y = Y.to(cfg.train.device)
+        Y_hat = model(X)
+        loss = criterion(Y_hat, Y)
+        accuracies.append(get_accuracy(Y_hat, Y))
+    accuracy = np.mean(accuracies)
+    print(f'Final Accuracy: {accuracy} ({accuracy * (1 - accuracy) / np.sqrt(len(accuracies))})')
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
