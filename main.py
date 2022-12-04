@@ -132,10 +132,10 @@ def get_dataloader(cfg):
     #     return datasets.living17(cfg, source=True)
     # elif cfg.datasets.name == 'living17_target':
     #     return datasets.living17(cfg, source=False)
-    elif cfg.datasets.name == 'sp_cifar_100_source':
-        return datasets.sp_cifar_100(cfg, source=True)
-    elif cfg.datasets.name == 'sp_cifar_100_target':
-        return datasets.sp_cifar_100(cfg, source=False)
+    # elif cfg.datasets.name == 'sp_cifar_100_source':
+    #     return datasets.sp_cifar_100(cfg, source=True)
+    # elif cfg.datasets.name == 'sp_cifar_100_target':
+    #     return datasets.sp_cifar_100(cfg, source=False)
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 
@@ -182,9 +182,7 @@ def get_optimizer(cfg, opt, opt_variation, layers, model):
 
 def get_variants(cfg, opt):
     if opt == 'MAB':
-        types = cfg.optimizer.MAB.type
-        if not isinstance(types, list):
-            types = [types]
+        types = cfg.optimizer.MAB.type.split(' ')
         return [{'type': t} for t in types]
     elif opt == 'layerwise':
         if cfg.layerwise.idx == -1:
@@ -203,15 +201,14 @@ def get_variants(cfg, opt):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
-    opts = cfg.optimizer.name
-    if not isinstance(opts, list):
-        opts = [opts]
+    opts = cfg.optimizer.name.split(' ')
     for opt in opts:
         for opt_variation in get_variants(cfg, opt):
             model, layers = get_model(cfg)
             dataloaders = get_dataloader(cfg)
             criterion = nn.CrossEntropyLoss()
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model)
+            print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             writer = tensorboard.SummaryWriter(
                 log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_' + cfg.optimizer.name + '_' +
                                      opt_variation['type'] + '_' + cfg.datasets.name))
