@@ -7,6 +7,9 @@ import re
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+sub_to_super = dict()
+label_map = dict()
+distributions = []
 # from https://github.com/ryanchankh/cifar100coarse/blob/master/sparse2coarse.py
 def sparse2coarse(targets):
     """Convert Pytorch CIFAR100 sparse targets to coarse targets.
@@ -38,7 +41,7 @@ def _load_meta() -> None:
         class_to_idx = {_class: i for i, _class in enumerate(classes)}
         return class_to_idx
 
-class_to_idx = _load_meta()
+
 
 all_labels = """aquatic mammals@beaver, dolphin, otter, seal, whale
 fish@aquarium fish, flatfish, ray, shark, trout
@@ -60,32 +63,34 @@ small mammals@hamster, mouse, rabbit, shrew, squirrel
 trees@maple_tree, oak_tree, palm_tree, pine_tree, willow_tree
 vehicles 1@bicycle, bus, motorcycle, pickup truck, train
 vehicles 2@lawn_mower, rocket, streetcar, tank, tractor"""
-# print(all_labels)
-probs = [0.35, 0.35, 0.2, 0.05, 0.05]
-counts = [100] * 5 # for a single superclass
-all_counts = [int(p * c) for p, c in zip(probs, counts)]
-sub_to_super = dict()
-label_map = dict()
-main_labels = all_labels.split('\n')
-print(class_to_idx)
-distributions = []
-for i in range(len(main_labels)):
-    cur_labels = main_labels[i].split('@')
-    min_labels = cur_labels[1].split(', ')
-    big_label = cur_labels[0]
-    for j in range(len(min_labels)):
-        sub_to_super[min_labels[j]] = big_label
-        cur = class_to_idx[min_labels[j].replace(' ', "_")]
-        label_map[cur] = i
 
-        init = [cur]
-        # print(f"CUR: {cur}")
-        # print(init * all_counts[j])
-        distributions.extend(init * all_counts[j])
-    # print(f'Row {i} current count: {len(distributions)}')
-    # print(sub_to_super)
-    # print(label_map)
-# print(distributions)
+def _populate():
+    class_to_idx = _load_meta()
+    # print(all_labels)
+    probs = [0.35, 0.35, 0.2, 0.05, 0.05]
+    counts = [100] * 5 # for a single superclass
+    all_counts = [int(p * c) for p, c in zip(probs, counts)]
+
+    main_labels = all_labels.split('\n')
+    # print(class_to_idx)
+
+    for i in range(len(main_labels)):
+        cur_labels = main_labels[i].split('@')
+        min_labels = cur_labels[1].split(', ')
+        big_label = cur_labels[0]
+        for j in range(len(min_labels)):
+            sub_to_super[min_labels[j]] = big_label
+            cur = class_to_idx[min_labels[j].replace(' ', "_")]
+            label_map[cur] = i
+
+            init = [cur]
+            # print(f"CUR: {cur}")
+            # print(init * all_counts[j])
+            distributions.extend(init * all_counts[j])
+        # print(f'Row {i} current count: {len(distributions)}')
+        # print(sub_to_super)
+        # print(label_map)
+    # print(distributions)
 
 def get_dataloaders(cfg, source=True):
     import omegaconf
@@ -93,11 +98,11 @@ def get_dataloaders(cfg, source=True):
     #cfg.datasets.dir = './datasets/data'
     SEED=42
 
-    train_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=True)
+    train_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=True, download=True)
     test_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=False)
     old_data = ConcatDataset([train_set, test_set])
     # print(len(old_data))
-
+    _populate()
     targets = old_data.targets
     src_idx, tgt_idx= train_test_split(
     np.arange(len(targets)), test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
@@ -109,6 +114,7 @@ def get_dataloaders(cfg, source=True):
     #   all_counts.append([int(p * c) for p, c in zip(probs, counts)])
     # chat gpt this
 
+    old_data.targets = sparse2coarse(old_data.targets)
     # let source and target be the same size?
     if source:
         # pass in indicies that are sampled that are towards a distribution towards 3 labels in the dataset
@@ -128,8 +134,8 @@ def sample():
     src_idx = []
     tgt_idx = []
 
-get_dataloaders(None, True)
-sample()
+# get_dataloaders(None, True)
+# sample()
 
 # use torch Subset to partition the indicies for source and target
 # sample in a distribution of [0.35 0.35 0.2 0.05 0.05] for source for each row
