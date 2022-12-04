@@ -193,10 +193,10 @@ def get_variants(cfg, opt):
         else:
             return [{'idx': cfg.layerwise.idx, 'type': cfg.layerwise.idx}]
     elif opt == 'full':
-        return [{}]
+        return [{'type': ''}]
     elif opt == 'gradnorm':
-        return [{}]
-    return [{}]
+        return [{'type': ''}]
+    return [{'type': ''}]
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
