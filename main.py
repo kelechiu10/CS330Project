@@ -15,6 +15,7 @@ from models import resnet_models
 from tqdm import tqdm
 from models.util import get_accuracy
 import optimizers
+import timm
 from SMPyBandits.Policies import DiscountedThompson, BESA, SWklUCBPlus, WrapRange
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
@@ -113,6 +114,8 @@ def get_model(cfg):
         return resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
     elif cfg.models.model_checkpoint == 'imagenet':
         model = resnet50(weights=ResNet50_Weights.DEFAULT)
+    elif cfg.models.model_checkpoint == 'cifar_100':
+        model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
     else:
         model = resnet50(weights=ResNet50_Weights.DEFAULT)
         load_model(model, cfg.models.model_checkpoint)
