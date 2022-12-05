@@ -22,7 +22,7 @@ class EpsilonGreedyFixed(EpsilonGreedy):
 
 
 class MABOptimizer:
-    def __init__(self, layers, lr, mab_policy: BasePolicy, writer, optimizer=optim.Adam):
+    def __init__(self, layers, lr, mab_policy: BasePolicy, writer, optimizer=optim.SGD):
         assert mab_policy.nbArms == len(layers), f'Number of arms not equal to number of layers {len(layers)}.'
 
         self.lr = lr
