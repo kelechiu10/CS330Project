@@ -11,14 +11,15 @@ class GradNorm:
         self.optimizer = LayerWiseOptimizer(layers, lr, optimizer=optimizer)
 
     def get_grad_norms(self):
-        # TODO: possibly change to relative gradient norm (divide layer grads' norm by layer parameters' norm)
         param_groups = self.optimizer.param_groups
         grad_norms = torch.empty(len(param_groups))
+        param_norms = torch.empty(len(param_groups))
 
         for i, group in enumerate(param_groups):
             grad_norms[i] = np.norm([torch.norm(p.grad) ** 2 for p in group['params']])
+            param_norms[i] = np.norm([torch.norm(p) ** 2 for p in group['params']])
 
-        grad_norms = F.softmax(grad_norms, dim=0)
+        grad_norms = F.softmax(grad_norms / param_norms, dim=0)
         return grad_norms
 
     def step(self, loss, closure=None):

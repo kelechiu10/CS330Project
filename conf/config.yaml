@@ -14,7 +14,7 @@ train:
 optimizer:
   name: "MAB"
   MAB:
-    type: "epsilon_greedy, discounted_thompson"
+    type: "epsilon_greedy discounted_thompson"
   layerwise:
     idx: -1
 
