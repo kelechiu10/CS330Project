@@ -29,8 +29,10 @@ def get_dataloaders(cfg, shuffle=True, split=(0.5, 0.5)):
     dataset.targets = flipped_targets
 
     SIZE = 2000
-    dataset.data = dataset.data[:SIZE]
-    dataset.targets = dataset.targets[:SIZE]
+    rng = np.random.default_rng(0)
+    perm = rng.permutation(len(dataset))[:SIZE]
+    dataset.data = dataset.data[perm]
+    dataset.targets = dataset.targets[perm]
 
     train_dataset, test_dataset = random_split(dataset, split)
 

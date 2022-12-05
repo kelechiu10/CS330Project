@@ -35,7 +35,9 @@ def get_dataloaders(cfg, corrupted=True):
                 tarobj.extractall(path=cfg.cifar.dir)
             print('Download successful!')
         SIZE = 2000
-        base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')[:SIZE]
-        base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')[:SIZE]
+        rng = np.random.default_rng(0)
+        perm = rng.permutation(len(base_dataset))[:SIZE]
+        base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')[perm]
+        base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')[perm]
 
     return base_dataset
