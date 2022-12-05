@@ -4,7 +4,7 @@ from functools import partial
 from typing import Dict
 import hydra
 import torch
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf, ListConfig
 from torch import nn
 from torch import optim
 from torch.utils import tensorboard
@@ -214,8 +214,7 @@ def get_variants(cfg, opt):
         if cfg.optimizer.layerwise.idx == -1:
             model, layers = get_model(cfg)
             return [{'idx': idx, 'type': idx} for idx in range(len(layers))]
-        elif isinstance(cfg.optimizer.layerwise.idx, list):
-            print(cfg.optimizer.layerwise.idx)
+        elif isinstance(cfg.optimizer.layerwise.idx, ListConfig):
             return [{'idx': idx, 'type': idx} for idx in cfg.optimizer.layerwise.idx]
         else:
             return [{'idx': cfg.optimizer.layerwise.idx, 'type': cfg.optimizer.layerwise.idx}]
