@@ -34,8 +34,8 @@ def get_dataloaders(cfg, corrupted=True):
             with requests.get(url, stream=True) as rx, tarfile.open(fileobj=rx.raw, mode="r|") as tarobj:
                 tarobj.extractall(path=cfg.cifar.dir)
             print('Download successful!')
-
-        base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')
-        base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')
+        SIZE = 2000
+        base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')[:SIZE]
+        base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')[:SIZE]
 
     return base_dataset

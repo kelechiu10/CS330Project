@@ -18,7 +18,7 @@ tr_transforms = transforms.Compose([#transforms.RandomCrop(32, padding=4),
                                     transforms.Normalize(*NORM)])
 
 
-def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
+def get_dataloaders(cfg, shuffle=True, split=(0.5, 0.5)):
     num_workers = cfg.train.num_workers
     batch_size = cfg.train.batch_size
 
@@ -27,6 +27,11 @@ def get_dataloaders(cfg, shuffle=True, split=(0.75, 0.25)):
     )
     flipped_targets = 9 - np.asarray(dataset.targets)
     dataset.targets = flipped_targets
+
+    SIZE = 2000
+    dataset.data = dataset.data[:SIZE]
+    dataset.targets = dataset.targets[:SIZE]
+
     train_dataset, test_dataset = random_split(dataset, split)
 
     print(train_dataset)
