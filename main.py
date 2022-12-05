@@ -176,7 +176,7 @@ WrapRange = partial(WrapRange, lower=0.0, amplitude=0.2)
 MAB_POLICIES = {
     'epsilon_greedy': partial(WrapRange, policy=EpsilonGreedyFixed),
     'discounted_thompson': partial(WrapRange, policy=DiscountedThompson),
-    'BESA': partial(BESA, minPullsOfEachArm=3),
+    'BESA': partial(BESA, minPullsOfEachArm=5),
     'SWklUCBPlus': partial(WrapRange, policy=partial(SWklUCBPlus, tau=100))
 }
 
