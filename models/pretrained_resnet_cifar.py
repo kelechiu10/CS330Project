@@ -298,6 +298,7 @@ def download_weights(dir):
 def _resnet(arch, block, layers, pretrained_dir, device, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained_dir is not None:
+        print('Loading model weights')
         if not os.path.exists(pretrained_dir):
             os.makedirs(pretrained_dir)
             download_weights(pretrained_dir)
@@ -338,6 +339,7 @@ def resnet50(pretrained_dir=None, device="cpu", **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
+    print('Loading pretrained resnet50')
     return _resnet(
         "resnet50", Bottleneck, [3, 4, 6, 3], pretrained_dir, device, **kwargs
     )
