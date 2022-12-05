@@ -215,6 +215,7 @@ def get_variants(cfg, opt):
             model, layers = get_model(cfg)
             return [{'idx': idx, 'type': idx} for idx in range(len(layers))]
         elif isinstance(cfg.optimizer.layerwise.idx, list):
+            print(cfg.optimizer.layerwise.idx)
             return [{'idx': idx, 'type': idx} for idx in cfg.optimizer.layerwise.idx]
         else:
             return [{'idx': cfg.optimizer.layerwise.idx, 'type': cfg.optimizer.layerwise.idx}]
@@ -234,7 +235,7 @@ def main(cfg: DictConfig) -> None:
             dataloaders = get_dataloader(cfg)
             criterion = nn.CrossEntropyLoss()
             writer = tensorboard.SummaryWriter(
-                log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_lr=1e-3_' + opt + '_' +
+                log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_' + opt + '_' +
                                      str(opt_variation['type']) + '_' + cfg.datasets.name))
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
             print(f'Starting finetuning with {opt} {opt_variation["type"]}')
