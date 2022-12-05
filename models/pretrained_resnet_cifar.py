@@ -307,7 +307,7 @@ def _resnet(arch, block, layers, pretrained_dir, device, **kwargs):
             os.path.join(pretrained_dir, "cifar10_models/state_dicts/", arch + ".pt"), map_location=device
         )
         model.load_state_dict(state_dict)
-    layers = [model.conv1, model.layer1, model.layer2, model.layer3, model.layer4, model.fc]
+    layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
     return model, layers
 
 
