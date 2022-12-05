@@ -31,7 +31,6 @@ class MABOptimizer:
         self.mab_policy.startGame()
         self.last_arm = None
         self.last_loss = None
-        self.totals = np.zeros(len(layers))
         self.writer = writer
         self.n = 0
 
@@ -48,9 +47,10 @@ class MABOptimizer:
         self.optimizer.step(arm, closure=closure)
         print(self.mab_policy.rewards / (1 + self.mab_policy.pulls))
         print(self.mab_policy.pulls)
-        self.totals[arm] += 1
-        for i in range(len(self.totals)):
-            self.writer.add_scalar(f'train/arm_{i}', self.totals[i], self.n)
+        pulls = np.zeros(self.mab_policy.nbArms)
+        pulls[arm] += 1
+        for i in range(len(pulls)):
+            self.writer.add_scalar(f'train/arm_{i}', pulls[i], self.n)
         self.n += 1
 
     def reward_metric(self, loss):

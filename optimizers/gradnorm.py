@@ -9,7 +9,6 @@ class GradNorm:
     def __init__(self, layers, lr, writer, optimizer=optim.Adam):
         self.lr = lr
         self.optimizer = LayerWiseOptimizer(layers, lr, optimizer=optimizer)
-        self.totals = np.zeros(len(layers))
         self.writer = writer
         self.n = 0
 
@@ -28,9 +27,8 @@ class GradNorm:
     def step(self, loss, closure=None):
         loss.backward()
         grad_norms = self.get_grad_norms()
-        self.totals += grad_norms
-        for i in range(len(self.totals)):
-            self.writer.add_scalar(f'train/arm_{i}', self.totals[i], self.n)
+        for i in range(len(grad_norms)):
+            self.writer.add_scalar(f'train/arm_{i}', grad_norms[i], self.n)
         self.optimizer.step(grad_norms, closure=closure)
         self.n += 1
 

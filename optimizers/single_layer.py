@@ -19,18 +19,10 @@ class SingleLayerOptimizer:
         self.lr = lr
 
         self.optimizer = optim.Adam(params=self.layer_parameters, lr=self.lr)
-
-        self.totals = np.zeros(len(layers))
         self.idx = idx
-        self.writer = writer
-        self.n = 0
 
     def step(self, loss, closure=None):
         loss.backward()
-        self.totals[self.idx] += 1
-        for i in range(len(self.totals)):
-            self.writer.add_scalar(f'train/arm_{i}', self.totals[i], self.n)
-        self.n += 1
         return self.optimizer.step(closure=closure)
 
     def zero_grad(self, set_to_none=False):
