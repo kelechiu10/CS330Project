@@ -109,13 +109,14 @@ def get_dataloaders(cfg, source=True):
     # targets = old_data.targets
     tr_targets = train_set.targets
     ts_targets = test_set.targets
-    targets = tr_targets + ts_targets
-    src_idx, tgt_idx= train_test_split(np.arange(len(targets)),
-        test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
+    # targets = tr_targets + ts_targets
+    # src_idx, tgt_idx= train_test_split(np.arange(len(targets)),
+    #     test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
 
-    train_set.targets = sparse2coarse(tr_targets)
-    test_set.targets = sparse2coarse(ts_targets)
+    #train_set.targets = sparse2coarse(tr_targets)
+    #test_set.targets = sparse2coarse(ts_targets)
     old_data = ConcatDataset([train_set, test_set])
+
     # print(old_data.targets)
     # probs = [0.35, 0.35, 0.2, 0.05, 0.05]
     # counts = [6000] * 5 # for a single superclass
@@ -123,13 +124,44 @@ def get_dataloaders(cfg, source=True):
     # for i in range(10):
     #   all_counts.append([int(p * c) for p, c in zip(probs, counts)])
     # chat gpt this
-
+    # train_set.targets = sparse2coarse(tr_targets)
+    # test_set.targets = sparse2coarse(ts_targets)
+    from collections import Counter
+    ndist = Counter(distributions)
+    for k, v in ndist.items():
+        ndist[k] = v//2
+    print(sum(ndist.values()))
+    nsrc_idx = []
+    ntgt_idx = []
+    for i in range(len(old_data)):
+        x,y = old_data[i]
+        if ndist[y] > 0:
+            ndist[y] -= 1
+            nsrc_idx.append(i)
+        else:
+            ntgt_idx.append(i)
+    train_set.targets = sparse2coarse(tr_targets)
+    test_set.targets = sparse2coarse(ts_targets)
     # let source and target be the same size?
     if source:
         # pass in indicies that are sampled that are towards a distribution towards 3 labels in the dataset
-        return Subset(old_data, src_idx)
+
+        return Subset(old_data, nsrc_idx)
+        from collections import Counter
+        counter = Counter()
+        print(f'LENGTH: {len(ss)}')
+        for item in ss:
+            # print(item)
+            counter[item[1]] +=1
+        print(sorted(counter.items()))
+        print(sum(counter.values()))
+        # dcount = Counter(distributions)
+        # print(sorted(dcount.items()))
+        # print(sum(dcount.values()))
+        # return Subset(old_data, nsrc_idx)
+
     else:
-        return Subset(old_data, tgt_idx)
+        return Subset(old_data, ntgt_idx)
         # pass in indicies that are sampled towards a distribution towards the remain 2
     # source: mostly the first 3 items
 
