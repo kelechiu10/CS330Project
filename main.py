@@ -181,16 +181,16 @@ MAB_POLICIES = {
 }
 
 
-def get_optimizer(cfg, opt, opt_variation, layers, model):
+def get_optimizer(cfg, opt, opt_variation, layers, model, writer):
     num_layers = len(layers)
     if opt == 'MAB':
         policy = MAB_POLICIES[opt_variation['type']](nbArms=num_layers)
-        optimizer = optimizers.MABOptimizer(layers, lr=cfg.train.lr, mab_policy=policy)
+        optimizer = optimizers.MABOptimizer(layers, lr=cfg.train.lr, mab_policy=policy, writer=writer)
         return optimizer
     elif opt == 'layerwise':
-        return optimizers.SingleLayerOptimizer(layers, opt_variation['idx'])
+        return optimizers.SingleLayerOptimizer(layers, opt_variation['idx'], writer=writer)
     elif opt == 'gradnorm':
-        return optimizers.GradNorm(layers, lr=cfg.train.lr)
+        return optimizers.GradNorm(layers, lr=cfg.train.lr, writer=writer)
     elif opt == 'full':
         return optim.Adam(params=model.parameters(), lr=cfg.train.lr)
     else:
@@ -224,11 +224,11 @@ def main(cfg: DictConfig) -> None:
             model, layers = get_model(cfg)
             dataloaders = get_dataloader(cfg)
             criterion = nn.CrossEntropyLoss()
-            optimizer = get_optimizer(cfg, opt, opt_variation, layers, model)
-            print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             writer = tensorboard.SummaryWriter(
                 log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + '_' + cfg.optimizer.name + '_' +
                                      opt_variation['type'] + '_' + cfg.datasets.name))
+            optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
+            print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             train_model(model, dataloaders, criterion, optimizer, writer, cfg)
 
     # model, layers = resnet_models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)

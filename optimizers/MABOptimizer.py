@@ -22,7 +22,7 @@ class EpsilonGreedyFixed(EpsilonGreedy):
 
 
 class MABOptimizer:
-    def __init__(self, layers, lr, mab_policy: BasePolicy, optimizer=optim.Adam):
+    def __init__(self, layers, lr, mab_policy: BasePolicy, writer, optimizer=optim.Adam):
         assert mab_policy.nbArms == len(layers), f'Number of arms not equal to number of layers {len(layers)}.'
 
         self.lr = lr
@@ -31,6 +31,9 @@ class MABOptimizer:
         self.mab_policy.startGame()
         self.last_arm = None
         self.last_loss = None
+        self.totals = np.zeros(len(layers))
+        self.writer = writer
+        self.n = 0
 
     def step(self, loss, closure=None):
         if self.last_loss is not None:
@@ -45,6 +48,10 @@ class MABOptimizer:
         self.optimizer.step(arm, closure=closure)
         print(self.mab_policy.rewards / (1 + self.mab_policy.pulls))
         print(self.mab_policy.pulls)
+        self.totals[arm] += 1
+        for i in range(len(self.totals)):
+            self.writer.add_scalar(f'train/arm_{i}', self.totals[i], self.n)
+        self.n += 1
 
     def reward_metric(self, loss):
         goodness = (self.last_loss - loss) / self.last_loss
