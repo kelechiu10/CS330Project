@@ -118,7 +118,16 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         loss = criterion(Y_hat, Y)
         accuracies.append(get_accuracy(Y_hat, Y))
     accuracy = np.mean(accuracies)
-    print(f'Final Accuracy: {accuracy} ({accuracy * (1 - accuracy) / np.sqrt(len(accuracies))})')
+    accuracy_se = np.sqrt(accuracy * (1 - accuracy)) / np.sqrt(len(accuracies))
+    print(f'Final Accuracy: {accuracy} ({accuracy_se})')
+    writer.add_scalar(
+        'final/accuracy',
+        accuracy
+    )
+    writer.add_scalar(
+        'final/accuracy_SE',
+        accuracy_se
+    )
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
