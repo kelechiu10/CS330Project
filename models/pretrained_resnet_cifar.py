@@ -29,7 +29,7 @@ class Sequential(nn.Sequential):
                     input = module(input, weights[i])
                     i += 1
                 elif isinstance(module, nn.Conv2d):
-                    input = module._conv_forward(input, weights[i], None)
+                    input = module._conv_forward(input, weights[i])
                     i += 1
                 else:
                     input = module(input)
@@ -93,11 +93,11 @@ class BasicBlock(nn.Module):
         if weights is not None:
             identity = x
 
-            out = self.conv1._conv_forward(x, weights[0], None)
+            out = self.conv1._conv_forward(x, weights[0])
             out = self.bn1(out)
             out = self.relu(out)
 
-            out = self.conv2._conv_forward(out, weights[1], None)
+            out = self.conv2._conv_forward(out, weights[1])
             out = self.bn2(out)
 
             if self.downsample is not None:
@@ -159,15 +159,15 @@ class Bottleneck(nn.Module):
         if weights is not None:
             identity = x
 
-            out = self.conv1._conv_forward(x, weights[0], None)
+            out = self.conv1._conv_forward(x, weights[0])
             out = self.bn1(out)
             out = self.relu(out)
 
-            out = self.conv2._conv_forward(out, weights[1], None)
+            out = self.conv2._conv_forward(out, weights[1])
             out = self.bn2(out)
             out = self.relu(out)
 
-            out = self.conv3._conv_forward(out, weights[2], None)
+            out = self.conv3._conv_forward(out, weights[2])
             out = self.bn3(out)
 
             if self.downsample is not None:
