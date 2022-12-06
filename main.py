@@ -193,6 +193,8 @@ def get_model(cfg):
                     m.weight.data = source_params[name + '.weight']
                     m.bias.data = source_params[name + '.bias']
             return model, layers
+        elif cfg.datasets.name == 'sp_cifar_100_source':
+            model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
         else:
             model = resnet50(weights=ResNet50_Weights.DEFAULT)
             load_model(model, cfg.models.model_checkpoint)
