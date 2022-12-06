@@ -50,13 +50,12 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     print(optimizer)
     if use_maml:
         print('using MAML')
-        # layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
-        parameters = model.named_parameters()#{i: layers[i].parameters() for i in range(len(layers))}
+        parameters = model.named_parameters()
         for k, v in parameters:
             if 'bn' not in k and 'downsample' not in k:
                 v.requires_grad = True
         learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in model.state_dict().keys()}
-        optimizer = optim.Adam(list(learning_rates.values()), lr=cfg.train.lr)
+        optimizer = optim.SGD(list(learning_rates.values()) + list(model.parameters()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
         for batch in tqdm(dataloaders['train'], position=1, leave=False):
@@ -74,7 +73,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 uses_grad = {k: p for k, p in params_original if 'bn' not in k and 'downsample' not in k}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True, allow_unused=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
-                    parameters[name] = uses_grad[name] - learning_rates[name] * grad
+                    uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
                 for name, m in model.named_modules():
                     if isinstance(m, nn.Conv2d):
                         m.weight = Parameter(parameters[name + '.weight'])
@@ -82,7 +81,6 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                         m.weight = Parameter(parameters[name + '.weight'])
                         m.bias = Parameter(parameters[name + '.bias'])
 
-                model.load_state_dict(parameters)
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
                 loss.backward()
