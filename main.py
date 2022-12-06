@@ -264,7 +264,7 @@ def main(cfg: DictConfig) -> None:
             criterion = nn.CrossEntropyLoss()
             writer = tensorboard.SummaryWriter(
                 log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + f'_lr:{cfg.train.lr}_' + opt + '_' +
-                                     str(opt_variation['type']) + '_' + cfg.datasets.name))
+                                     str(opt_variation['type']) + '_' + cfg.datasets.name + cfg.train.run_name))
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
             print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             train_model(model, dataloaders, criterion, optimizer, writer, cfg)
