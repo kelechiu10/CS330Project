@@ -1,4 +1,4 @@
-from SMPyBandits.Policies import BasePolicy, EpsilonGreedy, with_proba, SWUCBPlus, SWklUCB
+from SMPyBandits.Policies import BasePolicy, EpsilonGreedy, with_proba, SWUCBPlus, SWklUCB, BESA
 from torch import optim
 from optimizers.layerwise import LayerWiseOptimizer
 import numpy as np
@@ -48,9 +48,12 @@ class MABOptimizer:
         self.n = 0
 
     def step(self, loss, accuracy, closure=None):
-        if self.last_loss is not None:
-            self.mab_policy.getReward(self.last_arm, self.reward_metric(accuracy))
-        self.last_loss = accuracy
+        loss_val = loss.item()
+        if not isinstance(self.optimizer, BESA):
+            loss_val = -accuracy
+        elif self.last_loss is not None:
+            self.mab_policy.getReward(self.last_arm, self.reward_metric(loss_val))
+        self.last_loss = loss_val
         arm = self.mab_policy.choice()
         #print(arm)
         self.last_arm = arm
@@ -66,7 +69,7 @@ class MABOptimizer:
         self.n += 1
 
     def reward_metric(self, loss):
-        goodness = (loss - self.last_loss) / self.last_loss
+        goodness = (self.last_loss - loss) / np.abs(self.last_loss)
         # return 1. / (1 + torch.exp(-goodness))
         return goodness
 
