@@ -35,10 +35,11 @@ def save_model(model, epoch, cfg):
     print('model saved in: ', file_name)
 
 
-def load_model(model, filename):
+def load_model(model, filename, test=True):
     state_dict = torch.load(filename)
     model.load_state_dict(state_dict)
-    model.eval()
+    if test:
+        model.eval()
     print('policy model ', filename, ' loaded successfully')
 
 
@@ -177,8 +178,12 @@ def get_model(cfg):
     elif cfg.models.model_checkpoint == 'cifar_100':
         model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
     else:
-        model = resnet50(weights=ResNet50_Weights.DEFAULT)
-        load_model(model, cfg.models.model_checkpoint)
+        if cfg.datasets.name == 'sp_cifar_100_target':
+            model = timm.create_model(cfg.models.name, pretrained=False, num_classes=20)
+            load_model(model, cfg.models.model_checkpoint, test=False)
+        else:
+            model = resnet50(weights=ResNet50_Weights.DEFAULT)
+            load_model(model, cfg.models.model_checkpoint)
     # TODO: change these layers?
     layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
     return model, layers
