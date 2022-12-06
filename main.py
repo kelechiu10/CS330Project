@@ -7,6 +7,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf, ListConfig
 from torch import nn, autograd
 from torch import optim
+from torch.nn import Parameter
 from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 import numpy as np
@@ -69,17 +70,15 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             if use_maml:
                 parameters = model.state_dict()
                 params_original = model.named_parameters()
+                params_ref = model.parameters()
                 uses_grad = {k: p for k, p in params_original if 'bn' not in k and 'downsample' not in k}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True, allow_unused=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     parameters[name] = uses_grad[name] - learning_rates[name] * grad
                 for name, m in model.named_modules():
-                    if isinstance(m, nn.Conv2d):
-                        m.weight = parameters[name + '.weight']
-                        m.bias = parameters[name + '.bias']
-                    elif isinstance(m, nn.Linear):
-                        m.weight = parameters[name + '.weight']
-                        m.bias = parameters[name + '.bias']
+                    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                        m.weight = Parameter(parameters[name + '.weight'])
+                        m.bias = Parameter(parameters[name + '.bias'])
                 model.load_state_dict(parameters)
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
