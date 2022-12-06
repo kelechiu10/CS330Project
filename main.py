@@ -67,11 +67,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             if not use_maml:
                 Y_hat = model(X)
-                print(Y_hat.shape)
-                print(Y)
                 loss = criterion(Y_hat, Y)
-
-
+            
             if use_maml:
                 Y_hat = model(X[:32])
                 loss = criterion(Y_hat, Y[:32])
@@ -175,7 +172,6 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 
 
 def get_model(cfg):
-    print(cfg.datasets.name)
     if cfg.models.model_checkpoint == 'cifar':
         return resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
     elif cfg.models.model_checkpoint == 'imagenet':
