@@ -54,8 +54,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         for k, v in parameters.items():
             if 'bn' not in k and 'downsample' not in k:
                 v.requires_grad = True
-        learning_rates = torch.tensor([0.001] * len(parameters), requires_grad=True)
-        optimizer = optim.Adam([learning_rates], lr=cfg.train.lr)
+        learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in parameters.keys()}
+        optimizer = optim.Adam(list(learning_rates.values()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
         for batch in tqdm(dataloaders['train'], position=1, leave=False):
