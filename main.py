@@ -164,7 +164,7 @@ def get_dataloader(cfg):
     elif cfg.datasets.name == 'sp_cifar_100_source':
         base_dataset = datasets.sp_cifar_100(cfg, source=True)
     elif cfg.datasets.name == 'sp_cifar_100_target':
-        base_dataset = datasets.sp_cifar_100(cfg, source=False)
+        base_dataset = datasets.sp_cifar_100(cfg, source=False, percentage=0.05)
     else:
         raise f'Unknown dataset \'{cfg.datasets.name}\''
 
