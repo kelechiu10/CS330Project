@@ -68,7 +68,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             loss = criterion(Y_hat, Y)
             if use_maml:
                 uses_grad = {k: v for k, v in parameters.items() if v.requires_grad}
-                grads = autograd.grad(loss, uses_grad.values(), create_graph=True)
+                grads = autograd.grad(loss, uses_grad.values(), create_graph=True, allow_unused=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     parameters[name] = uses_grad[name] - learning_rates[name] * grad
                 model.load_state_dict(parameters)
