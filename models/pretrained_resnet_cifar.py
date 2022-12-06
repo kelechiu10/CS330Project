@@ -6,6 +6,7 @@ import os
 import requests
 import zipfile
 from tqdm import tqdm
+import torch.functional as F
 
 
 __all__ = [
@@ -31,10 +32,6 @@ class Sequential(nn.Module):
                     input = module(input, weights[i])
                     i += 1
                 elif isinstance(module, nn.Conv2d):
-                    print(weights[i].shape)
-                    print(module.weight.shape, module.bias)
-                    print(module.stride)
-                    print(input.shape)
                     input = module._conv_forward(input, weights[i], None)
                     i += 1
                 else:
@@ -358,7 +355,7 @@ class ResNet(nn.Module):
 
             x = self.avgpool(x)
             x = x.reshape(x.size(0), -1)
-            x = self.fc(x, [weights['fc.weight'], weights['fc.bias']])
+            x = F.linear(x, weights['fc.weight'], weights['fc.bias'])
         else:
             x = self.conv1(x)
             x = self.bn1(x)
