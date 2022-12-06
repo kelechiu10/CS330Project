@@ -15,6 +15,31 @@ __all__ = [
     "resnet50",
 ]
 
+
+class Sequential(nn.Sequential):
+    def __init__(self, args):
+        super(Sequential, self).__init__(*args)
+        self.layers = args
+
+    def forward(self, input, weights=None):
+        if weights is not None:
+            i = 0
+            for module in self.layers:
+                if isinstance(module, BasicBlock) or isinstance(module, Bottleneck):
+                    input = module(input, weights[i])
+                    i += 1
+                elif isinstance(module, nn.Conv2d):
+                    input = module._conv_forward(input, weights[i], None)
+                    i += 1
+                else:
+                    input = module(input)
+            return input
+        else:
+            for module in self.layers:
+                input = module(input)
+            return input
+
+
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(
@@ -64,23 +89,41 @@ class BasicBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x):
-        identity = x
+    def forward(self, x, weights=None):
+        if weights is not None:
+            identity = x
 
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
+            out = self.conv1._conv_forward(x, weights[0], None)
+            out = self.bn1(out)
+            out = self.relu(out)
 
-        out = self.conv2(out)
-        out = self.bn2(out)
+            out = self.conv2._conv_forward(out, weights[1], None)
+            out = self.bn2(out)
 
-        if self.downsample is not None:
-            identity = self.downsample(x)
+            if self.downsample is not None:
+                identity = self.downsample(x, weights[2])
 
-        out += identity
-        out = self.relu(out)
+            out += identity
+            out = self.relu(out)
 
-        return out
+            return out
+        else:
+            identity = x
+
+            out = self.conv1(x)
+            out = self.bn1(out)
+            out = self.relu(out)
+
+            out = self.conv2(out)
+            out = self.bn2(out)
+
+            if self.downsample is not None:
+                identity = self.downsample(x)
+
+            out += identity
+            out = self.relu(out)
+
+            return out
 
 
 class Bottleneck(nn.Module):
@@ -112,27 +155,49 @@ class Bottleneck(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x):
-        identity = x
+    def forward(self, x, weights=None):
+        if weights is not None:
+            identity = x
 
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
+            out = self.conv1._conv_forward(x, weights[0], None)
+            out = self.bn1(out)
+            out = self.relu(out)
 
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
+            out = self.conv2._conv_forward(out, weights[1], None)
+            out = self.bn2(out)
+            out = self.relu(out)
 
-        out = self.conv3(out)
-        out = self.bn3(out)
+            out = self.conv3._conv_forward(out, weights[2], None)
+            out = self.bn3(out)
 
-        if self.downsample is not None:
-            identity = self.downsample(x)
+            if self.downsample is not None:
+                identity = self.downsample(x, weights[3])
 
-        out += identity
-        out = self.relu(out)
+            out += identity
+            out = self.relu(out)
 
-        return out
+            return out
+        else:
+            identity = x
+
+            out = self.conv1(x)
+            out = self.bn1(out)
+            out = self.relu(out)
+
+            out = self.conv2(out)
+            out = self.bn2(out)
+            out = self.relu(out)
+
+            out = self.conv3(out)
+            out = self.bn3(out)
+
+            if self.downsample is not None:
+                identity = self.downsample(x)
+
+            out += identity
+            out = self.relu(out)
+
+            return out
 
 
 class ResNet(nn.Module):
@@ -213,9 +278,9 @@ class ResNet(nn.Module):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
+            downsample = Sequential(
+                [conv1x1(self.inplanes, planes * block.expansion, stride),
+                norm_layer(planes * block.expansion)]
             )
 
         layers = []
@@ -244,22 +309,64 @@ class ResNet(nn.Module):
                 )
             )
 
-        return nn.Sequential(*layers)
+        return Sequential(layers)
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+    def forward(self, x, weights=None):
+        if weights is not None:
+            x = self.conv1._conv_forward(x, weights['conv1.weight'])
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool(x)
+            layer = 'layer1'
+            x = self.layer1(x, [
+                [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
+                 weights[f'{layer}.0.downsample.0.weight']],
+                [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
+                [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']]
+                 ])
+            layer = 'layer2'
+            x = self.layer2(x, [
+                [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
+                 weights[f'{layer}.0.downsample.0.weight']],
+                [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
+                [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']],
+                [weights[f'{layer}.3.conv1.weight'], weights[f'{layer}.3.conv2.weight'], weights[f'{layer}.3.conv3.weight']]
+                 ])
+            layer = 'layer3'
+            x = self.layer3(x, [
+                [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
+                 weights[f'{layer}.0.downsample.0.weight']],
+                [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
+                [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']],
+                [weights[f'{layer}.3.conv1.weight'], weights[f'{layer}.3.conv2.weight'], weights[f'{layer}.3.conv3.weight']],
+                [weights[f'{layer}.4.conv1.weight'], weights[f'{layer}.4.conv2.weight'], weights[f'{layer}.4.conv3.weight']],
+                [weights[f'{layer}.5.conv1.weight'], weights[f'{layer}.5.conv2.weight'], weights[f'{layer}.5.conv3.weight']]
+                 ])
+            layer = 'layer4'
+            x = self.layer4(x, [
+                [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
+                 weights[f'{layer}.0.downsample.0.weight']],
+                [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
+                [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']]
+                 ])
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+            x = self.avgpool(x)
+            x = x.reshape(x.size(0), -1)
+            x = self.fc(x, [weights['fc.weight'], weights['fc.bias']])
+        else:
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool(x)
 
-        x = self.avgpool(x)
-        x = x.reshape(x.size(0), -1)
-        x = self.fc(x)
+            x = self.layer1(x)
+            x = self.layer2(x)
+            x = self.layer3(x)
+            x = self.layer4(x)
+
+            x = self.avgpool(x)
+            x = x.reshape(x.size(0), -1)
+            x = self.fc(x)
 
         return x
 
