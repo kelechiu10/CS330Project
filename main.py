@@ -54,7 +54,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         for k, v in parameters:
             if 'bn' not in k:
                 v.requires_grad = True
-        learning_rates = {k: torch.tensor(cfg.optimizers.MAML.lr, requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
+        learning_rates = {k: torch.tensor(cfg.optimizer.MAML.lr, requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
         optimizer = optim.SGD(list(learning_rates.values()) + list(model.parameters()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
@@ -252,6 +252,11 @@ def get_variants(cfg, opt):
         return [{'type': ''}]
     elif opt == 'gradnorm':
         return [{'type': ''}]
+    elif opt == 'MAML':
+        if isinstance(cfg.optimizer.layerwise.idx, ListConfig):
+            return [{'type': lr} for lr in cfg.optimizer.MAML.lr]
+        else:
+            return [{'type': cfg.optimizer.MAML.lr}]
     return [{'type': ''}]
 
 
