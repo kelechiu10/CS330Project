@@ -50,11 +50,11 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     if use_maml:
         print('using MAML')
         # layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
-        parameters = model.state_dict()#{i: layers[i].parameters() for i in range(len(layers))}
-        for k, v in parameters.items():
+        parameters = model.named_parameters()#{i: layers[i].parameters() for i in range(len(layers))}
+        for k, v in parameters:
             if 'bn' not in k and 'downsample' not in k:
                 v.requires_grad = True
-        learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in parameters.keys()}
+        learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in model.state_dict().keys()}
         optimizer = optim.Adam(list(learning_rates.values()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
@@ -67,12 +67,10 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
             if use_maml:
-                uses_grad = {k: v for k, v in parameters.items() if v.requires_grad}
+                parameters = model.state_dict()
+                uses_grad = {k: p for k, p in model.named_parameters() if 'bn' not in k and 'downsample' not in k}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True, allow_unused=True)
-                print(grads)
                 for (name, grad) in zip(uses_grad.keys(), grads):
-                    print(grad)
-                    print(learning_rates[name])
                     parameters[name] = uses_grad[name] - learning_rates[name] * grad
                 model.load_state_dict(parameters)
                 Y_hat = model(X)
