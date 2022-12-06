@@ -58,6 +58,9 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             if isinstance(optimizer, optim.Adam):
                 loss.backward()
                 optimizer.step()
+            elif isinstance(optimizer, optimizers.MABOptimizer):
+                accuracy = get_accuracy(Y_hat, Y)
+                optimizer.step(loss, accuracy)
             else:
                 optimizer.step(loss)
             writer.add_scalar('train/loss', loss.item(), itr)
