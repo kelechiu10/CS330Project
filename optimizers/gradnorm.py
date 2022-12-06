@@ -6,7 +6,7 @@ from optimizers.layerwise import LayerWiseOptimizer
 
 
 class GradNorm:
-    def __init__(self, layers, lr, writer, optimizer=optim.Adam):
+    def __init__(self, layers, lr, writer, optimizer=optim.SGD):
         self.lr = lr
         self.optimizer = LayerWiseOptimizer(layers, lr, optimizer=optimizer)
         self.writer = writer
