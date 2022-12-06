@@ -21,7 +21,7 @@ class GradNorm:
             grad_norms[i] = torch.norm(torch.tensor([torch.norm(p.grad) ** 2 for p in group['params']]))
             param_norms[i] = torch.norm(torch.tensor([torch.norm(p) ** 2 for p in group['params']]))
 
-        grad_norms = F.softmax(grad_norms / param_norms * 1e3, dim=0)
+        grad_norms = F.softmax(grad_norms / param_norms * 1e2, dim=0)
         return grad_norms
 
     def step(self, loss, closure=None):
