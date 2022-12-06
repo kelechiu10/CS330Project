@@ -6,10 +6,13 @@ import pickle
 import re
 import numpy as np
 from sklearn.model_selection import train_test_split
+from collections import Counter
 
 sub_to_super = dict()
 label_map = dict()
 distributions = []
+sdist = Counter()
+tdist = Counter()
 # from https://github.com/ryanchankh/cifar100coarse/blob/master/sparse2coarse.py
 def sparse2coarse(targets):
     """Convert Pytorch CIFAR100 sparse targets to coarse targets.
@@ -64,13 +67,14 @@ trees@maple_tree, oak_tree, palm_tree, pine_tree, willow_tree
 vehicles 1@bicycle, bus, motorcycle, pickup truck, train
 vehicles 2@lawn_mower, rocket, streetcar, tank, tractor"""
 
-def _populate():
+def _populate(ratio=0.05):
     class_to_idx = _load_meta()
     # print(all_labels)
     probs = [0.35, 0.35, 0.2, 0.05, 0.05]
     counts = [3000] * 5 # for a single superclass
     all_counts = [int(p * c) for p, c in zip(probs, counts)]
-
+    src_counts = [600, 600, 600, 0, 0]
+    tgt_counts = [0, 0, 0, int(600 * ratio), int(600 * ratio)]
     main_labels = all_labels.split('\n')
     # print(class_to_idx)
 
@@ -86,13 +90,27 @@ def _populate():
             init = [cur]
             # print(f"CUR: {cur}")
             # print(init * all_counts[j])
-            distributions.extend(init * all_counts[j])
+
+            # distributions.extend(init * all_counts[j])
+            if src_counts[j] > 0:
+                sdist[cur] += src_counts[j]
+            if tgt_counts[j] > 0:
+                tdist[cur] += tgt_counts[j]
+
+            # for k, v in tdist.items():
+            #     tdist[k] = v * ratio
         # print(f'Row {i} current count: {len(distributions)}')
         # print(sub_to_super)
         # print(label_map)
     # print(distributions)
 
-def get_dataloaders(cfg, source=True):
+    # print(len(sdist))
+    # print(sdist)
+    # print(len(tdist))
+    # print(tdist)
+    # exit()
+
+def get_dataloaders(cfg, source=True, ratio=0.05):
     import omegaconf
     cfg = omegaconf.OmegaConf.load('conf/config.yaml')
     #cfg.datasets.dir = './datasets/data'
@@ -105,13 +123,13 @@ def get_dataloaders(cfg, source=True):
     test_set = torchvision.datasets.CIFAR100(root=cfg.datasets.dir, train=False, transform=transforms)
 
     # print(len(old_data))
-    _populate()
+    _populate(cfg.datasets.cifar.ratio)
     # targets = old_data.targets
     tr_targets = train_set.targets
     ts_targets = test_set.targets
     # targets = tr_targets + ts_targets
     # src_idx, tgt_idx= train_test_split(np.arange(len(targets)),
-    #     test_size=0.5, random_state=42, shuffle=True, stratify=distributions)
+    #     test_size=0.5, random_state=42, shuffle=True, stfy=distributions)
 
     #train_set.targets = sparse2coarse(tr_targets)
     #test_set.targets = sparse2coarse(ts_targets)
@@ -130,16 +148,22 @@ def get_dataloaders(cfg, source=True):
     ndist = Counter(distributions)
     for k, v in ndist.items():
         ndist[k] = v//2
-    print(sum(ndist.values()))
+    # print(sum(ndist.values()))
     nsrc_idx = []
     ntgt_idx = []
     for i in range(len(old_data)):
         x,y = old_data[i]
-        if ndist[y] > 0:
+        if sdist[y] > 0:
             ndist[y] -= 1
             nsrc_idx.append(i)
-        else:
+        elif tdist[y] > 0:
+            tdist[y] -= 1
             ntgt_idx.append(i)
+        # if ndist[y] > 0:
+        #     ndist[y] -= 1
+        #     nsrc_idx.append(i)
+        # else:
+        #     ntgt_idx.append(i)
     train_set.targets = sparse2coarse(tr_targets)
     test_set.targets = sparse2coarse(ts_targets)
     # let source and target be the same size?
@@ -147,14 +171,14 @@ def get_dataloaders(cfg, source=True):
         # pass in indicies that are sampled that are towards a distribution towards 3 labels in the dataset
 
         return Subset(old_data, nsrc_idx)
-        from collections import Counter
-        counter = Counter()
-        print(f'LENGTH: {len(ss)}')
-        for item in ss:
-            # print(item)
-            counter[item[1]] +=1
-        print(sorted(counter.items()))
-        print(sum(counter.values()))
+        # counter = Counter()
+        # print(f'LENGTH: {len(ss)}')
+        # for item in ss:
+        #     # print(item)
+        #     counter[item[1]] +=1
+        # print(sorted(counter.items()))
+        # print(sum(counter.values()))
+        # exit()
         # dcount = Counter(distributions)
         # print(sorted(dcount.items()))
         # print(sum(dcount.values()))
@@ -162,6 +186,14 @@ def get_dataloaders(cfg, source=True):
 
     else:
         return Subset(old_data, ntgt_idx)
+        # counter = Counter()
+        # print(f'LENGTH: {len(ss)}')
+        # for item in ss:
+        #     # print(item)
+        #     counter[item[1]] +=1
+        # print(sorted(counter.items()))
+        # print(sum(counter.values()))
+        exit()
         # pass in indicies that are sampled towards a distribution towards the remain 2
     # source: mostly the first 3 items
 
