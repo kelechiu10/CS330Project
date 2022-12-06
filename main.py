@@ -179,8 +179,20 @@ def get_model(cfg):
         model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
     else:
         if cfg.datasets.name == 'sp_cifar_100_target':
-            model = timm.create_model(cfg.models.name, pretrained=False, num_classes=20)
-            load_model(model, cfg.models.model_checkpoint, test=False)
+            model_source = timm.create_model(cfg.models.name, pretrained=False, num_classes=20)
+            load_model(model_source, cfg.models.model_checkpoint, test=False)
+            model, layers = resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
+            source_params = {k: v for k, v in model_source.named_parameters()}
+            for name, m in model.named_modules():
+                if isinstance(m, nn.Conv2d):
+                    m.weight.data = source_params[name + '.weight']
+                elif isinstance(m, nn.Linear):
+                    m.weight.data = source_params[name + '.weight']
+                    m.bias.data = source_params[name + '.bias']
+                elif isinstance(m, nn.BatchNorm2d):
+                    m.weight.data = source_params[name + '.weight']
+                    m.bias.data = source_params[name + '.bias']
+            return model, layers
         else:
             model = resnet50(weights=ResNet50_Weights.DEFAULT)
             load_model(model, cfg.models.model_checkpoint)
