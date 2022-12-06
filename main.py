@@ -80,6 +80,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                     if isinstance(m, nn.Conv2d):
                         m.weight = Parameter()
                         m.weight.data = uses_grad[name + '.weight']
+                        print(uses_grad[name + '.weight'].grad_fn)
+                        print(m.weight.data.grad_fn)
                     elif isinstance(m, nn.Linear):
                         m.weight = Parameter()
                         m.weight.data = uses_grad[name + '.weight']
