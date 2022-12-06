@@ -76,14 +76,13 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                     uses_grad[name] = Parameter(uses_grad[name])
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
                     print(uses_grad[name].grad_fn)
-                for name, m in model.named_modules():
-                    if isinstance(m, nn.Conv2d):
-                        m.weight = uses_grad[name + '.weight']
-                    elif isinstance(m, nn.Linear):
-                        m.weight = uses_grad[name + '.weight']
-                        m.bias = uses_grad[name + '.bias']
-
-                Y_hat = model(X)
+                # for name, m in model.named_modules():
+                #     if isinstance(m, nn.Conv2d):
+                #         m.weight = uses_grad[name + '.weight']
+                #     elif isinstance(m, nn.Linear):
+                #         m.weight = uses_grad[name + '.weight']
+                #         m.bias = uses_grad[name + '.bias']
+                Y_hat = model(X, weights=uses_grad)
                 loss = criterion(Y_hat, Y)
                 loss.backward()
                 optimizer.step()
