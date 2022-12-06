@@ -68,7 +68,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             if not use_maml:
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
-            
+
             if use_maml:
                 Y_hat = model(X[:32])
                 loss = criterion(Y_hat, Y[:32])
@@ -159,6 +159,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     print(f'Final Accuracy: {accuracy} ({accuracy_se})')
     if use_maml:
         print(torch.tensor(list(learning_rates.values())))
+    if isinstance(optimizer, optimizers.MABOptimizer):
+        print(optimizer.mab_policy.pulls)
     writer.add_scalar(
         'final/accuracy',
         accuracy
@@ -180,6 +182,7 @@ def get_model(cfg):
         model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
     else:
         if cfg.datasets.name == 'sp_cifar_100_target':
+            print('Using Target Model')
             model_source = timm.create_model(cfg.models.name, pretrained=False, num_classes=20)
             load_model(model_source, cfg.models.model_checkpoint, test=False)
             model, layers = resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
