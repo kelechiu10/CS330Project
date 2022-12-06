@@ -64,18 +64,15 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             X, Y = batch
             X = X.to(cfg.train.device)
             Y = Y.to(cfg.train.device)
-            print(X.shape)
-            print(Y.shape)
-            print(X)
-            print(Y)
             optimizer.zero_grad()
             if not use_maml:
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
 
             if use_maml:
-                Y_hat = model(X[:32])
-                loss = criterion(Y_hat, Y[:32])
+                mid_point = len(Y) // 2
+                Y_hat = model(X[:mid_point])
+                loss = criterion(Y_hat, Y[:mid_point])
                 params_original = model.named_parameters()
                 params_ref = model.parameters()
                 uses_grad = {k: p for k, p in params_original if 'bn' not in k}
@@ -83,8 +80,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     uses_grad[name] = Parameter(uses_grad[name])
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
-                Y_hat = model(X[32:], weights=uses_grad)
-                loss = criterion(Y_hat, Y[32:])
+                Y_hat = model(X[mid_point:], weights=uses_grad)
+                loss = criterion(Y_hat, Y[mid_point:])
                 loss.backward()
                 optimizer.step()
                 for name, m in model.named_modules():
