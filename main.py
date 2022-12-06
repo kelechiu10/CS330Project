@@ -5,7 +5,7 @@ from typing import Dict
 import hydra
 import torch
 from omegaconf import DictConfig, OmegaConf, ListConfig
-from torch import nn
+from torch import nn, autograd
 from torch import optim
 from torch.utils import tensorboard
 from torch.utils.data import DataLoader
@@ -45,6 +45,17 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     since = time.time()
     model.to(cfg.train.device)
     itr = 0
+    use_maml = optimizer is None
+    print(optimizer)
+    if use_maml:
+        print('using MAML')
+        # layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
+        parameters = model.named_parameters()#{i: layers[i].parameters() for i in range(len(layers))}
+        for k, v in parameters:
+            if 'bn' not in k and 'downsample' not in k:
+                v.requires_grad = True
+        learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in model.state_dict().keys()}
+        optimizer = optim.Adam(list(learning_rates.values()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
         for batch in tqdm(dataloaders['train'], position=1, leave=False):
@@ -55,7 +66,18 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
-            if isinstance(optimizer, optim.Adam):
+            if use_maml:
+                parameters = model.state_dict()
+                uses_grad = {k: p for k, p in model.named_parameters() if 'bn' not in k and 'downsample' not in k}
+                grads = autograd.grad(loss, uses_grad.values(), create_graph=True, allow_unused=True)
+                for (name, grad) in zip(uses_grad.keys(), grads):
+                    parameters[name] = uses_grad[name] - learning_rates[name] * grad
+                model.load_state_dict(parameters)
+                Y_hat = model(X)
+                loss = criterion(Y_hat, Y)
+                loss.backward()
+                optimizer.step()
+            elif isinstance(optimizer, optim.Adam):
                 loss.backward()
                 optimizer.step()
             elif isinstance(optimizer, optimizers.MABOptimizer):
@@ -123,6 +145,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     accuracy = np.mean(accuracies)
     accuracy_se = np.sqrt(accuracy * (1 - accuracy)) / np.sqrt(len(accuracies))
     print(f'Final Accuracy: {accuracy} ({accuracy_se})')
+    if use_maml:
+        print(learning_rates.values())
     writer.add_scalar(
         'final/accuracy',
         accuracy
@@ -205,6 +229,8 @@ def get_optimizer(cfg, opt, opt_variation, layers, model, writer):
         return optimizers.GradNorm(layers, lr=cfg.train.lr, writer=writer)
     elif opt == 'full':
         return optim.Adam(params=model.parameters(), lr=cfg.train.lr)
+    elif opt == 'MAML':
+        return None
     else:
         raise f'Unknown optimizer \'{opt}\''
 
@@ -238,7 +264,7 @@ def main(cfg: DictConfig) -> None:
             criterion = nn.CrossEntropyLoss()
             writer = tensorboard.SummaryWriter(
                 log_dir=os.path.join(cfg.logging.dir, cfg.models.model_checkpoint + f'_lr:{cfg.train.lr}_' + opt + '_' +
-                                     str(opt_variation['type']) + '_' + cfg.datasets.name))
+                                     str(opt_variation['type']) + '_' + cfg.datasets.name + str(cfg.train.run_name)))
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
             print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             train_model(model, dataloaders, criterion, optimizer, writer, cfg)

@@ -43,7 +43,7 @@ def get_dataloaders(cfg, shuffle=True, split=(0.5, 0.5)):
         train_dataset, batch_size=batch_size,
         num_workers=num_workers, shuffle=shuffle
     )
-    dataloaders['eval'] = torch.utils.data.DataLoader(
+    dataloaders['test'] = torch.utils.data.DataLoader(
         test_dataset, batch_size=batch_size,
         num_workers=num_workers, shuffle=shuffle
     )
