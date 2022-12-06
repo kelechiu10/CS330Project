@@ -49,7 +49,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     print(optimizer)
     if use_maml:
         print('using MAML')
-        layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
+        # layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
         parameters = model.state_dict()#{i: layers[i].parameters() for i in range(len(layers))}
         learning_rates = torch.tensor([0.001] * len(parameters), requires_grad=True)
         optimizer = optim.Adam([learning_rates], lr=cfg.train.lr)
@@ -64,8 +64,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
             if use_maml:
-                print('using maml')
-                uses_grad = {(k, v) for k, v in parameters.items() if v.requires_grad}
+                uses_grad = {k: v for k, v in parameters.items() if v.requires_grad}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     parameters[name] = uses_grad[name] - learning_rates[name] * grad
