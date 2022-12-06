@@ -175,6 +175,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
 
 
 def get_model(cfg):
+    print(cfg.datasets.name)
     if cfg.models.model_checkpoint == 'cifar':
         return resnet_models.get_cifar_model(cfg.models.name, cfg.train.pretrained_dir)
     elif cfg.models.model_checkpoint == 'imagenet':
