@@ -1,4 +1,4 @@
-from SMPyBandits.Policies import BasePolicy, EpsilonGreedy, with_proba
+from SMPyBandits.Policies import BasePolicy, EpsilonGreedy, with_proba, SWUCBPlus, SWklUCB
 from torch import optim
 from optimizers.layerwise import LayerWiseOptimizer
 import numpy as np
@@ -19,6 +19,19 @@ class EpsilonGreedyFixed(EpsilonGreedy):
             # Uniform choice among the best arms
             biased_means = self.rewards / (1 + self.pulls)
             return rn.choice(np.nonzero(biased_means == np.max(biased_means))[0])
+
+
+class SWklUCBPlus(SWUCBPlus, SWklUCB):
+    r""" An experimental policy, using only a sliding window (of :math:`\tau` *steps*, not counting draws of each arms) instead of using the full-size history, and using klUCB (see :class:`Policy.klUCB`) indexes instead of UCB.
+
+    - Uses :math:`\tau = 4 \sqrt{T \log(T)}` if the horizon :math:`T` is given, otherwise use the default value.
+    """
+
+    def __str__(self):
+        name = self.klucb.__name__[5:]
+        if name == "Bern": name = ""
+        if name != "": name = "({})".format(name)
+        return r"SW-klUCB{}+($\tau={}$)".format(name, self.tau)
 
 
 class MABOptimizer:
@@ -44,8 +57,8 @@ class MABOptimizer:
 
         loss.backward()
         self.optimizer.step(arm, closure=closure)
-        print(self.mab_policy.rewards / (1 + self.mab_policy.pulls))
-        print(self.mab_policy.pulls)
+        # print(self.mab_policy.rewards / (1 + self.mab_policy.pulls))
+        # print(self.mab_policy.pulls)
         pulls = np.zeros(self.mab_policy.nbArms)
         pulls[arm] += 1
         for i in range(len(pulls)):

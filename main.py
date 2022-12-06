@@ -16,10 +16,10 @@ from tqdm import tqdm
 from models.util import get_accuracy
 import optimizers
 import timm
-from SMPyBandits.Policies import DiscountedThompson, BESA, SWklUCBPlus, WrapRange
+from SMPyBandits.Policies import DiscountedThompson, BESA, WrapRange
 from torchvision.models import resnet50, ResNet50_Weights
 from datasets.util import random_split
-from optimizers.MABOptimizer import EpsilonGreedyFixed
+from optimizers.MABOptimizer import EpsilonGreedyFixed, SWklUCBPlus
 
 
 def save_model(model, epoch, cfg):
@@ -242,26 +242,6 @@ def main(cfg: DictConfig) -> None:
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
             print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             train_model(model, dataloaders, criterion, optimizer, writer, cfg)
-
-    # model, layers = resnet_models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
-    # num_layers = len(layers)
-    # for idx in range(num_layers):
-    #     model, layers = resnet_models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
-    # # model = load_pretrained_model(model_name='Standard', model_dir=cfg.train.pretrained_dir, dataset='cifar10')
-    #     dataloaders = cifar_flip.get_dataloaders(cfg)
-    #     criterion = nn.CrossEntropyLoss() #get_criterion(cfg)
-    #     optimizer = single_layer.SingleLayerOptimizer(layers, idx)#optim.Adam(params=model.parameters(), lr=0.001) #get_optimizer(cfg)
-    #     writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_singlelayer_' + str(idx) + '_' + cfg.datasets.name))
-    #     train_model(model, dataloaders, criterion, optimizer, writer, cfg)
-    # model, layers = models.get_cifar_model(cfg.train.model_name, cfg.train.pretrained_dir)
-    # num_layers = len(layers)
-    # dataloaders = cifar_flip.get_dataloaders(cfg)
-    # criterion = nn.CrossEntropyLoss()
-    # policy = EpsilonGreedy(nbArms=num_layers)
-    # optimizer = MABOptimizer.MABOptimizer(layers, lr=1e-3, mab_policy=policy)
-    # writer = tensorboard.SummaryWriter(log_dir=os.path.join(cfg.logging.dir, cfg.train.model_name + '_MAB_epsilon_greedy_policy_' + '_' + cfg.train.dataset_name))
-    # train_model(model, dataloaders, criterion, optimizer, writer, cfg)
-
 
 if __name__ == "__main__":
     main()
