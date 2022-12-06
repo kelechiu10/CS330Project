@@ -5,6 +5,7 @@ import requests as requests
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import torch
+import random
 import numpy as np
 
 NORM = ((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -34,10 +35,27 @@ def get_dataloaders(cfg, corrupted=True):
             with requests.get(url, stream=True) as rx, tarfile.open(fileobj=rx.raw, mode="r|") as tarobj:
                 tarobj.extractall(path=cfg.cifar.dir)
             print('Download successful!')
-        SIZE = 2000
-        rng = np.random.default_rng(0)
-        perm = rng.permutation(len(base_dataset))[:SIZE]
-        base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')[perm]
-        base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')[perm]
+        # SIZE = 2000
+        # rng = np.random.default_rng(0)
+        # perm = rng.permutation(len(base_dataset))[:SIZE]
+        # base_dataset.data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{cfg.datasets.cifar.corruption}.npy')[perm]
+        # base_dataset.targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')[perm]
+        SAMPLE_SIZE = 133
+        data_list = []
+        targets_list = []
+        for corruption in common_corruptions:
+            rng = np.random.default_rng(0)
+            perm = rng.permutation(len(base_dataset))[:SAMPLE_SIZE]
+            data = np.load(cfg.datasets.dir + f'/CIFAR-10-C/{corruption}.npy')[perm]
+            targets = np.load(cfg.datasets.dir + f'/CIFAR-10-C/labels.npy')[perm]
+            data_list.extend(data)
+            targets_list.extend(targets)
+        shuffled_inds = np.arange(len(data_list))
+        np.random.permutation(shuffled_inds)
+        shuffled_inds = shuffled_inds.tolist()
+        data_list = np.asarray(data_list)[shuffled_inds]
+        targets_list = np.asarray(targets_list)[shuffled_inds]
 
+        base_dataset.data = data_list
+        base_dataset.targets = targets_list
     return base_dataset
