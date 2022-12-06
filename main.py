@@ -81,6 +81,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                         m.weight = Parameter()
                         m.weight.data = uses_grad[name + '.weight']
                         print(uses_grad[name + '.weight'].grad_fn)
+                        m.weight.data.grad_fn = uses_grad[name + '.weight'].grad_fn
+                        m.weight.grad_fn = uses_grad[name + '.weight'].grad_fn
                         print(m.weight.data.grad_fn)
                     elif isinstance(m, nn.Linear):
                         m.weight = Parameter()
