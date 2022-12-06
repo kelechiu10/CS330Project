@@ -73,6 +73,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 uses_grad = {k: p for k, p in params_original if 'bn' not in k}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
+                    uses_grad[name].requires_grad = True
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
                 for name, m in model.named_modules():
                     if isinstance(m, nn.Conv2d):
