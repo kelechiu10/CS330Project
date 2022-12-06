@@ -54,7 +54,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         for k, v in parameters:
             if 'bn' not in k:
                 v.requires_grad = True
-        learning_rates = {k: torch.tensor(opt_variation, requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
+        learning_rates = {k: torch.tensor(opt_variation['type'], requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
         optimizer = optim.SGD(list(learning_rates.values()) + list(model.parameters()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
