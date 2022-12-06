@@ -75,7 +75,6 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     uses_grad[name] = Parameter(uses_grad[name])
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
-                    print(uses_grad[name].grad_fn)
                 # for name, m in model.named_modules():
                 #     if isinstance(m, nn.Conv2d):
                 #         m.weight = uses_grad[name + '.weight']
