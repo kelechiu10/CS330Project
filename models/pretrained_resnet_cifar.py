@@ -313,7 +313,7 @@ class ResNet(nn.Module):
 
     def forward(self, x, weights=None):
         if weights is not None:
-            x = self.conv1._conv_forward(x, weights['conv1.weight'])
+            x = self.conv1._conv_forward(x, weights['conv1.weight'], None)
             x = self.bn1(x)
             x = self.relu(x)
             x = self.maxpool(x)
