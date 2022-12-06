@@ -67,7 +67,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             if not use_maml:
                 Y_hat = model(X)
-                print(Y_hat)
+                print(Y_hat.shape)
                 print(Y)
                 loss = criterion(Y_hat, Y)
 
@@ -198,6 +198,7 @@ def get_model(cfg):
                     m.bias.data = source_params[name + '.bias']
             return model, layers
         elif cfg.datasets.name == 'sp_cifar_100_source':
+            print('Using Source Model')
             model = timm.create_model(cfg.models.name, pretrained=True, num_classes=20)
         else:
             model = resnet50(weights=ResNet50_Weights.DEFAULT)
