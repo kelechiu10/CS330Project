@@ -19,7 +19,7 @@ optimizer:
   layerwise:
     idx: -1
   MAML:
-    lr: 1e-3
+    lr: 0.0001
 
 models:
   name: "resnet50"
