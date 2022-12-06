@@ -68,10 +68,18 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             loss = criterion(Y_hat, Y)
             if use_maml:
                 parameters = model.state_dict()
-                uses_grad = {k: p for k, p in model.named_parameters() if 'bn' not in k and 'downsample' not in k}
+                params_original = model.named_parameters()
+                uses_grad = {k: p for k, p in params_original if 'bn' not in k and 'downsample' not in k}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True, allow_unused=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     parameters[name] = uses_grad[name] - learning_rates[name] * grad
+                for name, m in model.named_modules():
+                    if isinstance(m, nn.Conv2d):
+                        m.weight = parameters[name + 'weight']
+                        m.bias = parameters[name + 'bias']
+                    elif isinstance(m, nn.Linear):
+                        m.weight = parameters[name + '.weight']
+                        m.bias = parameters[name + '.bias']
                 model.load_state_dict(parameters)
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
