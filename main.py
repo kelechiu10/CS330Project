@@ -52,7 +52,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         print('using MAML')
         parameters = model.named_parameters()
         for k, v in parameters:
-            if 'bn' not in k and 'downsample' not in k:
+            if 'bn' not in k:
                 v.requires_grad = True
         learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in model.state_dict().keys()}
         optimizer = optim.SGD(list(learning_rates.values()) + list(model.parameters()), lr=cfg.train.lr)
@@ -70,16 +70,16 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 parameters = model.state_dict()
                 params_original = model.named_parameters()
                 params_ref = model.parameters()
-                uses_grad = {k: p for k, p in params_original if 'bn' not in k and 'downsample' not in k}
+                uses_grad = {k: p for k, p in params_original if 'bn' not in k}
                 grads = autograd.grad(loss, uses_grad.values(), create_graph=True)
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
                 for name, m in model.named_modules():
                     if isinstance(m, nn.Conv2d):
-                        m.weight = Parameter(uses_grad[name + '.weight'])
+                        m.weight = uses_grad[name + '.weight']
                     elif isinstance(m, nn.Linear):
-                        m.weight = Parameter(uses_grad[name + '.weight'])
-                        m.bias = Parameter(uses_grad[name + '.bias'])
+                        m.weight = uses_grad[name + '.weight']
+                        m.bias = uses_grad[name + '.bias']
 
                 Y_hat = model(X)
                 loss = criterion(Y_hat, Y)
