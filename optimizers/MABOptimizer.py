@@ -49,8 +49,8 @@ class MABOptimizer:
 
     def step(self, loss, accuracy, closure=None):
         loss_val = loss.item()
-        if not isinstance(self.optimizer, BESA):
-            loss_val = -accuracy
+        # if not isinstance(self.optimizer, BESA):
+        #     loss_val = -accuracy
         if self.last_loss is not None:
             self.mab_policy.getReward(self.last_arm, self.reward_metric(loss_val))
         self.last_loss = loss_val
