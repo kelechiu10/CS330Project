@@ -253,7 +253,7 @@ def get_variants(cfg, opt):
     elif opt == 'gradnorm':
         return [{'type': ''}]
     elif opt == 'MAML':
-        if isinstance(cfg.optimizer.layerwise.idx, ListConfig):
+        if isinstance(cfg.optimizer.MAML.lr, ListConfig):
             return [{'type': lr} for lr in cfg.optimizer.MAML.lr]
         else:
             return [{'type': cfg.optimizer.MAML.lr}]
