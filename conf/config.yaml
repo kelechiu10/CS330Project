@@ -30,6 +30,7 @@ datasets:
   dir: "./datasets/data"
   cifar:
     corruption: "gaussian_noise"
+    ratio: 0.1
   living17:
     info_dir: "./datasets/data/imagenet_class_hierarchy/modified"
 
