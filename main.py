@@ -67,7 +67,11 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             if not use_maml:
                 Y_hat = model(X)
+                print(Y_hat)
+                print(Y)
                 loss = criterion(Y_hat, Y)
+
+
             if use_maml:
                 Y_hat = model(X[:32])
                 loss = criterion(Y_hat, Y[:32])
