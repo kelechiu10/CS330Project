@@ -5,7 +5,7 @@ from typing import Dict
 import hydra
 import torch
 from omegaconf import DictConfig, OmegaConf, ListConfig
-from torch import nn
+from torch import nn, autograd
 from torch import optim
 from torch.utils import tensorboard
 from torch.utils.data import DataLoader
@@ -45,6 +45,14 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     since = time.time()
     model.to(cfg.train.device)
     itr = 0
+    use_maml = optimizer is None
+    print(optimizer)
+    if use_maml:
+        print('using MAML')
+        layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
+        parameters = model.state_dict()#{i: layers[i].parameters() for i in range(len(layers))}
+        learning_rates = torch.tensor([0.001] * len(parameters), requires_grad=True)
+        optimizer = optim.Adam([learning_rates], lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
         for batch in tqdm(dataloaders['train'], position=1, leave=False):
@@ -55,7 +63,18 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             optimizer.zero_grad()
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
-            if isinstance(optimizer, optim.Adam):
+            if use_maml:
+                print('using maml')
+                uses_grad = {(k, v) for k, v in parameters.items() if v.requires_grad}
+                grads = autograd.grad(loss, uses_grad.values(), create_graph=True)
+                for (name, grad) in zip(uses_grad.keys(), grads):
+                    parameters[name] = uses_grad[name] - learning_rates[name] * grad
+                model.load_state_dict(parameters)
+                Y_hat = model(X)
+                loss = criterion(Y_hat, Y)
+                loss.backward()
+                optimizer.step()
+            elif isinstance(optimizer, optim.Adam):
                 loss.backward()
                 optimizer.step()
             elif isinstance(optimizer, optimizers.MABOptimizer):
@@ -205,6 +224,8 @@ def get_optimizer(cfg, opt, opt_variation, layers, model, writer):
         return optimizers.GradNorm(layers, lr=cfg.train.lr, writer=writer)
     elif opt == 'full':
         return optim.Adam(params=model.parameters(), lr=cfg.train.lr)
+    elif opt == 'MAML':
+        return None
     else:
         raise f'Unknown optimizer \'{opt}\''
 
