@@ -153,7 +153,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
     accuracy_se = np.sqrt(accuracy * (1 - accuracy)) / np.sqrt(len(accuracies))
     print(f'Final Accuracy: {accuracy} ({accuracy_se})')
     if use_maml:
-        print(learning_rates.values())
+        print(torch.tensor(learning_rates.values()))
     writer.add_scalar(
         'final/accuracy',
         accuracy
