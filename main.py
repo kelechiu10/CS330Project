@@ -64,9 +64,12 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             X = X.to(cfg.train.device)
             Y = Y.to(cfg.train.device)
             optimizer.zero_grad()
-            Y_hat = model(X[:32])
-            loss = criterion(Y_hat, Y[:32])
+            if not use_maml:
+                Y_hat = model(X)
+                loss = criterion(Y_hat, Y)
             if use_maml:
+                Y_hat = model(X[:32])
+                loss = criterion(Y_hat, Y[:32])
                 params_original = model.named_parameters()
                 params_ref = model.parameters()
                 uses_grad = {k: p for k, p in params_original if 'bn' not in k}
