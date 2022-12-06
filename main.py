@@ -64,8 +64,8 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             X = X.to(cfg.train.device)
             Y = Y.to(cfg.train.device)
             optimizer.zero_grad()
-            Y_hat = model(X)
-            loss = criterion(Y_hat, Y)
+            Y_hat = model(X[:32])
+            loss = criterion(Y_hat, Y[:32])
             if use_maml:
                 params_original = model.named_parameters()
                 params_ref = model.parameters()
@@ -74,10 +74,16 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     uses_grad[name] = Parameter(uses_grad[name])
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
-                Y_hat = model(X, weights=uses_grad)
-                loss = criterion(Y_hat, Y)
+                Y_hat = model(X[32:], weights=uses_grad)
+                loss = criterion(Y_hat, Y[32:])
                 loss.backward()
                 optimizer.step()
+                for name, m in model.named_modules():
+                    if isinstance(m, nn.Conv2d):
+                        m.weight.data = uses_grad[name + '.weight']
+                    elif isinstance(m, nn.Linear):
+                        m.weight.data = uses_grad[name + '.weight']
+                        m.bias.data = uses_grad[name + '.bias']
             elif isinstance(optimizer, optim.Adam):
                 loss.backward()
                 optimizer.step()
