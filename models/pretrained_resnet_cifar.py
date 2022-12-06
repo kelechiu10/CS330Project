@@ -6,7 +6,7 @@ import os
 import requests
 import zipfile
 from tqdm import tqdm
-import torch.functional as F
+import torch.nn.functional as F
 
 
 __all__ = [
