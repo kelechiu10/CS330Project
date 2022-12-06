@@ -326,14 +326,14 @@ class ResNet(nn.Module):
             layer = 'layer1'
             x = self.layer1(x, [
                 [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
-                 weights[f'{layer}.0.downsample.0.weight']],
+                 [weights[f'{layer}.0.downsample.0.weight']]],
                 [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
                 [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']]
                  ])
             layer = 'layer2'
             x = self.layer2(x, [
                 [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
-                 weights[f'{layer}.0.downsample.0.weight']],
+                 [weights[f'{layer}.0.downsample.0.weight']]],
                 [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
                 [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']],
                 [weights[f'{layer}.3.conv1.weight'], weights[f'{layer}.3.conv2.weight'], weights[f'{layer}.3.conv3.weight']]
@@ -341,7 +341,7 @@ class ResNet(nn.Module):
             layer = 'layer3'
             x = self.layer3(x, [
                 [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
-                 weights[f'{layer}.0.downsample.0.weight']],
+                 [weights[f'{layer}.0.downsample.0.weight']]],
                 [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
                 [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']],
                 [weights[f'{layer}.3.conv1.weight'], weights[f'{layer}.3.conv2.weight'], weights[f'{layer}.3.conv3.weight']],
@@ -351,7 +351,7 @@ class ResNet(nn.Module):
             layer = 'layer4'
             x = self.layer4(x, [
                 [weights[f'{layer}.0.conv1.weight'], weights[f'{layer}.0.conv2.weight'], weights[f'{layer}.0.conv3.weight'],
-                 weights[f'{layer}.0.downsample.0.weight']],
+                 [weights[f'{layer}.0.downsample.0.weight']]],
                 [weights[f'{layer}.1.conv1.weight'], weights[f'{layer}.1.conv2.weight'], weights[f'{layer}.1.conv3.weight']],
                 [weights[f'{layer}.2.conv1.weight'], weights[f'{layer}.2.conv2.weight'], weights[f'{layer}.2.conv3.weight']]
                  ])
