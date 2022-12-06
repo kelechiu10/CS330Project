@@ -189,7 +189,7 @@ MAB_POLICIES = {
     'epsilon_greedy': partial(WrapRange, policy=EpsilonGreedyFixed),
     'discounted_thompson': partial(WrapRange, policy=DiscountedThompson),
     'BESA': partial(BESA, minPullsOfEachArm=5),
-    'SWklUCBPlus': partial(WrapRange, policy=partial(SWklUCBPlus, tau=100))
+    'SWklUCBPlus': partial(WrapRange, policy=partial(SWklUCBPlus, horizon=100))
 }
 
 
@@ -242,6 +242,7 @@ def main(cfg: DictConfig) -> None:
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
             print(f'Starting finetuning with {opt} {opt_variation["type"]}')
             train_model(model, dataloaders, criterion, optimizer, writer, cfg)
+
 
 if __name__ == "__main__":
     main()
