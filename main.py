@@ -42,7 +42,7 @@ def load_model(model, filename):
     print('policy model ', filename, ' loaded successfully')
 
 
-def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer, writer, cfg):
+def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion, optimizer, writer, cfg, opt_variation):
     since = time.time()
     model.to(cfg.train.device)
     itr = 0
@@ -54,7 +54,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         for k, v in parameters:
             if 'bn' not in k:
                 v.requires_grad = True
-        learning_rates = {k: torch.tensor(cfg.optimizer.MAML.lr, requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
+        learning_rates = {k: torch.tensor(opt_variation, requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
         optimizer = optim.SGD(list(learning_rates.values()) + list(model.parameters()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
@@ -273,7 +273,7 @@ def main(cfg: DictConfig) -> None:
                                      str(opt_variation['type']) + '_' + cfg.datasets.name + str(cfg.train.run_name)))
             optimizer = get_optimizer(cfg, opt, opt_variation, layers, model, writer)
             print(f'Starting finetuning with {opt} {opt_variation["type"]}')
-            train_model(model, dataloaders, criterion, optimizer, writer, cfg)
+            train_model(model, dataloaders, criterion, optimizer, writer, cfg, opt_variation)
 
 
 if __name__ == "__main__":
