@@ -54,7 +54,7 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         for k, v in parameters:
             if 'bn' not in k:
                 v.requires_grad = True
-        learning_rates = {k: torch.tensor(0.001, requires_grad=True) for k in model.state_dict().keys()}
+        learning_rates = {k: torch.tensor(cfg.optimizers.MAML.lr, requires_grad=True) for k in model.state_dict().keys() if 'bn' not in k}
         optimizer = optim.SGD(list(learning_rates.values()) + list(model.parameters()), lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
         model.train()
@@ -67,7 +67,6 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             Y_hat = model(X)
             loss = criterion(Y_hat, Y)
             if use_maml:
-                parameters = model.state_dict()
                 params_original = model.named_parameters()
                 params_ref = model.parameters()
                 uses_grad = {k: p for k, p in params_original if 'bn' not in k}
@@ -75,12 +74,6 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
                 for (name, grad) in zip(uses_grad.keys(), grads):
                     uses_grad[name] = Parameter(uses_grad[name])
                     uses_grad[name] = uses_grad[name] - learning_rates[name] * grad
-                # for name, m in model.named_modules():
-                #     if isinstance(m, nn.Conv2d):
-                #         m.weight = uses_grad[name + '.weight']
-                #     elif isinstance(m, nn.Linear):
-                #         m.weight = uses_grad[name + '.weight']
-                #         m.bias = uses_grad[name + '.bias']
                 Y_hat = model(X, weights=uses_grad)
                 loss = criterion(Y_hat, Y)
                 loss.backward()

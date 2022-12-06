@@ -18,6 +18,8 @@ optimizer:
     type: "epsilon_greedy discounted_thompson"
   layerwise:
     idx: -1
+  MAML:
+    lr: 1e-3
 
 models:
   name: "resnet50"
