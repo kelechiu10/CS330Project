@@ -51,6 +51,9 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
         print('using MAML')
         # layers = [nn.Sequential(model.conv1, model.layer1), model.layer2, model.layer3, model.layer4, model.fc]
         parameters = model.state_dict()#{i: layers[i].parameters() for i in range(len(layers))}
+        for k, v in parameters.items():
+            if 'bn' not in k and 'downsample' not in k:
+                v.requires_grad = True
         learning_rates = torch.tensor([0.001] * len(parameters), requires_grad=True)
         optimizer = optim.Adam([learning_rates], lr=cfg.train.lr)
     for epoch in tqdm(range(cfg.train.num_epochs), position=0, leave=False):
