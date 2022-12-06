@@ -18,8 +18,8 @@ class GradNorm:
         param_norms = torch.empty(len(param_groups))
 
         for i, group in enumerate(param_groups):
-            grad_norms[i] = np.linalg.norm([torch.norm(p.grad).cpu() ** 2 for p in group['params']])
-            param_norms[i] = np.linalg.norm([torch.norm(p).cpu() ** 2 for p in group['params']])
+            grad_norms[i] = torch.norm(torch.tensor([torch.norm(p.grad) ** 2 for p in group['params']]))
+            param_norms[i] = torch.norm(torch.tensor([torch.norm(p) ** 2 for p in group['params']]))
 
         grad_norms = F.softmax(grad_norms / param_norms, dim=0)
         return grad_norms
