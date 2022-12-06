@@ -16,10 +16,12 @@ __all__ = [
 ]
 
 
-class Sequential(nn.Sequential):
+class Sequential(nn.Module):
     def __init__(self, args):
-        super(Sequential, self).__init__(*args)
+        super(Sequential, self).__init__()
         self.layers = args
+        for idx, module in enumerate(args):
+            self.add_module(str(idx), module)
 
     def forward(self, input, weights=None):
         if weights is not None:
@@ -29,6 +31,8 @@ class Sequential(nn.Sequential):
                     input = module(input, weights[i])
                     i += 1
                 elif isinstance(module, nn.Conv2d):
+                    print(weights[i])
+                    print(module.weight, module.bias)
                     input = module._conv_forward(input, weights[i], None)
                     i += 1
                 else:
