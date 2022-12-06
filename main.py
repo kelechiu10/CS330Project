@@ -64,6 +64,10 @@ def train_model(model: nn.Module, dataloaders: Dict[str, DataLoader], criterion,
             X, Y = batch
             X = X.to(cfg.train.device)
             Y = Y.to(cfg.train.device)
+            print(X.shape)
+            print(Y.shape)
+            print(X)
+            print(Y)
             optimizer.zero_grad()
             if not use_maml:
                 Y_hat = model(X)
