@@ -31,8 +31,10 @@ class Sequential(nn.Module):
                     input = module(input, weights[i])
                     i += 1
                 elif isinstance(module, nn.Conv2d):
-                    print(weights[i])
-                    print(module.weight, module.bias)
+                    print(weights[i].shape)
+                    print(module.weight.shape, module.bias)
+                    print(module.stride)
+                    print(input.shape)
                     input = module._conv_forward(input, weights[i], None)
                     i += 1
                 else:
