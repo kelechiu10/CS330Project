@@ -1,1 +1,8 @@
-# finetune
+# Layer Autotuning: Automated Fine-tuning Algorithms for Transfer Learning
+
+In the domain of transfer learning, model fine-tuning plays a central part in the construction of many models, especially in a low data regime. Pretraining on a larger source dataset followed by fine-tuning on a target dataset has been shown to improve generalization and performance on the target distribution. One recently proposed fine-tuning approach is that of surgical fine-tuning, whereby fine-tuning some small subset of the layers of the neural network can lead to better performance than fine-tuning all of the layers in terms of learning a distribution shift (Lee et al, 2022).
+
+However, it is still an open question whether the process of surgical fine-tuning can be effectively automated, i.e. whether the process of determining which layers one should fine-tune can be incorporated as part of the transfer learning process.
+Keeping in line with the methodology of Lee et al (2022), we specifically focus on modeling three kinds of distribution shifts: input-level shifts, population-level shifts, and output-level shifts. We investigate multi-armed bandit-based optimization algorithms and a MAML-based optimization algorithm that automate the fine-tuning process, and we evaluate their performance relative to the full and single-layer fine-tuning benchmarks. 
+
+To read our project paper, see the file labeled 'automated_fine_tuning_paper.pdf' on our repository. For any questions about this project, please email Shaunak Bhandarkar (shaunakb@stanford.edu), Kai Fronsdal (kaif@stanford.edu), or Kelechi Uhegbu (kuhegbu@stanford.edu). 
